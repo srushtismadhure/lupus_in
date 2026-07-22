@@ -21,6 +21,7 @@ import {
   handleNurseMntWorklist,
   handleSendForSignature,
   handleSession,
+  handleExtendSession,
   handleSignMntReferral,
   handleUpdatePatient,
   proxyFhirRequest,
@@ -56,6 +57,22 @@ import {
   handlePriorAuthReadiness,
   handleRejectClinicalConcept,
   handleSaveClinicalNoteDraft,
+  handleCareCoordinationProposals,
+  handleConfirmCareCoordinationReferral,
+  handleCreateCareCoordinationCommunication,
+  handleGetCareCoordination,
+  handleGetCareCoordinationTimeline,
+  handlePreviewCareCoordinationReferral,
+  handleUpdateCareCoordinationTask,
+  handleGetPortalSection,
+  handlePortalAppointmentChangeRequest,
+  handlePortalCreateMessage,
+  handlePortalNutritionSupportRequest,
+  handlePortalRefillRequest,
+  handlePortalReport,
+  handleGetSleSystemsReview,
+  handleSubmitSleSystemAssessment,
+  handleCreateSleSystemTask,
 } from "./handlers.js";
 
 function jsonError(message: string, status: number): Response {
@@ -142,6 +159,47 @@ export async function handleRequest(req: Request): Promise<Response> {
     if (method !== "GET") return jsonError("Method not allowed", 405);
     return handleSession(req);
   }
+  if (segments.length === 2 && segments[0] === "session" && segments[1] === "extend") {
+    if (method !== "POST") return jsonError("Method not allowed", 405);
+    return handleExtendSession(req);
+  }
+
+  // --- patient portal: patient identity always comes from the signed session ---
+  if (segments[0] === "portal") {
+    const section = segments[1];
+    if (segments.length === 2 && section === "messages" && method === "POST") {
+      return handlePortalCreateMessage(req);
+    }
+    if (segments.length === 2 && ["summary", "lupus", "labs", "nutrition", "care-plan", "appointments", "medications", "care-team", "messages", "documents"].includes(section ?? "")) {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleGetPortalSection(req, section as Parameters<typeof handleGetPortalSection>[1]);
+    }
+    if (segments.length === 3 && section === "labs") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleGetPortalSection(req, "labs", segments[2]!);
+    }
+    if (segments.length === 3 && section === "appointments" && segments[2] === "change-request") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handlePortalAppointmentChangeRequest(req);
+    }
+    if (segments.length === 3 && section === "medications" && segments[2] === "refill-request") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handlePortalRefillRequest(req);
+    }
+    if (segments.length === 3 && section === "nutrition" && segments[2] === "request-support") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handlePortalNutritionSupportRequest(req);
+    }
+    if (segments.length === 3 && section === "documents" && segments[2] === "report") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handlePortalReport(req);
+    }
+    if (segments.length === 2 && section === "logout") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleLogout();
+    }
+    return jsonError("Not found", 404);
+  }
 
   // --- worklists ---
   if (segments.length === 1 && segments[0] === "clinician-worklist") {
@@ -166,6 +224,46 @@ export async function handleRequest(req: Request): Promise<Response> {
     if (segments.length === 3 && segments[2] === "deactivate") {
       if (method !== "POST") return jsonError("Method not allowed", 405);
       return handleDeactivatePatient(req, segments[1]!);
+    }
+    if (segments.length === 3 && segments[2] === "care-coordination") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleGetCareCoordination(req, segments[1]!);
+    }
+    if (segments.length === 3 && segments[2] === "sle-systems-review") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleGetSleSystemsReview(req, segments[1]!);
+    }
+    if (segments.length === 4 && segments[2] === "sle-systems-review" && segments[3] === "assessments") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleSubmitSleSystemAssessment(req, segments[1]!);
+    }
+    if (segments.length === 4 && segments[2] === "sle-systems-review" && segments[3] === "tasks") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleCreateSleSystemTask(req, segments[1]!);
+    }
+    if (segments.length === 4 && segments[2] === "care-coordination" && segments[3] === "proposals") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleCareCoordinationProposals(req, segments[1]!);
+    }
+    if (segments.length === 5 && segments[2] === "care-coordination" && segments[3] === "referrals" && segments[4] === "preview") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handlePreviewCareCoordinationReferral(req, segments[1]!);
+    }
+    if (segments.length === 5 && segments[2] === "care-coordination" && segments[3] === "referrals" && segments[4] === "confirm") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleConfirmCareCoordinationReferral(req, segments[1]!);
+    }
+    if (segments.length === 5 && segments[2] === "care-coordination" && segments[3] === "tasks") {
+      if (method !== "PATCH") return jsonError("Method not allowed", 405);
+      return handleUpdateCareCoordinationTask(req, segments[1]!, segments[4]!);
+    }
+    if (segments.length === 4 && segments[2] === "care-coordination" && segments[3] === "communications") {
+      if (method !== "POST") return jsonError("Method not allowed", 405);
+      return handleCreateCareCoordinationCommunication(req, segments[1]!);
+    }
+    if (segments.length === 4 && segments[2] === "care-coordination" && segments[3] === "timeline") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleGetCareCoordinationTimeline(req, segments[1]!);
     }
     if (segments.length === 3 && segments[2] === "medications") {
       if (method !== "GET") return jsonError("Method not allowed", 405);

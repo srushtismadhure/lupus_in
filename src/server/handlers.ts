@@ -16,8 +16,11 @@ import {
   forbiddenResponse,
   getSessionFromRequest,
   isDemoRole,
+  requirePatient,
   requireRole,
+  requireStaff,
   unauthorizedResponse,
+  verifySessionToken,
 } from "../lib/auth.js";
 import { buildPatientResource, mergePatientResource, validatePatientInput, type PatientFormInput } from "../lib/patient-input.js";
 import {
@@ -100,6 +103,28 @@ import {
   searchTransplantPrograms,
 } from "../lib/kidney-services/search.js";
 import { createFhirDirectoryBundle } from "../lib/kidney-services/to-fhir-directory-bundle.js";
+import { loadCareCoordinationData } from "../lib/care-coordination/load-care-coordination-data.js";
+import { buildCareCoordinationPlan } from "../lib/care-coordination/normalize.js";
+import {
+  confirmCareCoordinationReferral,
+  createCoordinationCommunication,
+  previewCareCoordinationReferral,
+  updateCoordinationTask,
+  type ReferralActionBody,
+  type TaskActionBody,
+} from "../lib/care-coordination/service.js";
+import { loadPatientPortalData } from "../lib/patient-portal/load-patient-portal-data.js";
+import { buildPatientPortalModel } from "../lib/patient-portal/build-patient-portal-model.js";
+import {
+  createAppointmentChangeRequest,
+  createNutritionSupportRequest,
+  createPatientPortalMessage,
+  createRefillRequest,
+} from "../lib/patient-portal/service.js";
+import { loadSleSystemsReviewData } from "../lib/sle-systems-review/load-sle-systems-review-data.js";
+import { buildSleSystemsReviewModel } from "../lib/sle-systems-review/normalize.js";
+import { createSleSystemReviewTask, submitSleSystemAssessment } from "../lib/sle-systems-review/service.js";
+import type { SubmitSleAssessmentInput } from "../lib/sle-systems-review/types.js";
 
 const HOP_BY_HOP_RESPONSE_HEADERS = new Set(["content-type", "location", "content-location", "etag", "last-modified"]);
 const FORWARDED_REQUEST_HEADERS = ["if-match", "if-none-match", "if-modified-since", "prefer"];
@@ -120,7 +145,7 @@ export function networkErrorResponse() {
  * (e.g. `/Patient`), passed in explicitly so callers don't need to agree on a URL prefix.
  */
 export async function proxyFhirRequest(req: Request, fhirSubPath: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const fhirConfig = getFhirConfig();
   const incomingUrl = new URL(req.url);
@@ -193,27 +218,67 @@ export async function handleDemoLogin(req: Request): Promise<Response> {
 
   const token = createDemoSessionToken(role);
   const user = DEMO_USERS[role];
+  const session = verifySessionToken(token);
   return Response.json(
-    { authenticated: true, user: { email: user.email, displayName: user.displayName, role } },
-    { status: 200, headers: { "Set-Cookie": buildSessionCookie(token) } },
+    {
+      authenticated: true,
+      user: { email: user.email, displayName: user.displayName, role, patientId: user.patientId },
+      expiresAt: session?.exp,
+    },
+    { status: 200, headers: { "Set-Cookie": buildSessionCookie(token), "Cache-Control": "no-store" } },
   );
 }
 
 export async function handleLogout(): Promise<Response> {
-  return Response.json({ ok: true }, { status: 200, headers: { "Set-Cookie": buildClearedSessionCookie() } });
+  return Response.json(
+    { ok: true },
+    {
+      status: 200,
+      headers: {
+        "Set-Cookie": buildClearedSessionCookie(),
+        "Cache-Control": "no-store",
+        "Clear-Site-Data": '"cache"',
+      },
+    },
+  );
 }
 
 export async function handleSession(req: Request): Promise<Response> {
   const session = getSessionFromRequest(req);
-  if (!session) return Response.json({ authenticated: false }, { status: 200 });
+  if (!session) return Response.json({ authenticated: false }, { status: 200, headers: { "Cache-Control": "no-store" } });
   return Response.json(
-    { authenticated: true, user: { email: session.email, displayName: session.displayName, role: session.role } },
-    { status: 200 },
+    {
+      authenticated: true,
+      user: {
+        email: session.email,
+        displayName: session.displayName,
+        role: session.role,
+        patientId: session.patientId,
+      },
+      expiresAt: session.exp,
+    },
+    { status: 200, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+export async function handleExtendSession(req: Request): Promise<Response> {
+  const session = getSessionFromRequest(req);
+  if (!session) return unauthorizedResponse();
+  const token = createDemoSessionToken(session.role);
+  const user = DEMO_USERS[session.role];
+  const renewed = verifySessionToken(token);
+  return Response.json(
+    {
+      authenticated: true,
+      user: { email: user.email, displayName: user.displayName, role: session.role, patientId: user.patientId },
+      expiresAt: renewed?.exp,
+    },
+    { status: 200, headers: { "Set-Cookie": buildSessionCookie(token), "Cache-Control": "no-store" } },
   );
 }
 
 export async function handleCreatePatient(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   let input: Partial<PatientFormInput>;
   try {
@@ -250,7 +315,7 @@ export async function handleCreatePatient(req: Request): Promise<Response> {
 }
 
 export async function handleUpdatePatient(req: Request, patientId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   let input: Partial<PatientFormInput>;
   try {
@@ -282,7 +347,7 @@ export async function handleUpdatePatient(req: Request, patientId: string): Prom
 }
 
 export async function handleDeactivatePatient(req: Request, patientId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const current = await readFhirResource<fhir4.Patient | fhir4.OperationOutcome>("Patient", patientId);
   if (current.status !== 200 || isOperationOutcome(current.body)) {
@@ -296,7 +361,7 @@ export async function handleDeactivatePatient(req: Request, patientId: string): 
 }
 
 export async function handleClinicianWorklist(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const worklist = await buildClinicianWorklist();
@@ -308,7 +373,7 @@ export async function handleClinicianWorklist(req: Request): Promise<Response> {
 }
 
 export async function handleNurseMntWorklist(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const worklist = await buildNurseMntWorklist();
@@ -325,7 +390,7 @@ function mntActionResponse(result: MntActionResult): Response {
 }
 
 export async function handleGetMntState(req: Request, patientId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const patientResult = await readFhirResource<fhir4.Patient | fhir4.OperationOutcome>("Patient", patientId);
   if (patientResult.status !== 200 || isOperationOutcome(patientResult.body)) {
@@ -503,7 +568,7 @@ function medicationActionResponse(result: MedicationActionResult): Response {
 }
 
 export async function handleGetMedicationState(req: Request, patientId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const patientResult = await readFhirResource<fhir4.Patient | fhir4.OperationOutcome>("Patient", patientId);
   if (patientResult.status !== 200 || isOperationOutcome(patientResult.body)) {
@@ -687,7 +752,7 @@ function directoryReadError(error: unknown): Response {
 }
 
 export async function handleKidneyTransplantPrograms(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const parsed = parseKidneyServiceSearchParams(new URL(req.url).searchParams);
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
@@ -701,7 +766,7 @@ export async function handleKidneyTransplantPrograms(req: Request): Promise<Resp
 }
 
 export async function handleKidneyTransplantProgram(req: Request, centerCode: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const program = await getKidneyTransplantProgram(decodeURIComponent(centerCode));
@@ -713,7 +778,7 @@ export async function handleKidneyTransplantProgram(req: Request, centerCode: st
 }
 
 export async function handleKidneyTransplantProgramFhir(req: Request, centerCode: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const program = await getKidneyTransplantProgram(decodeURIComponent(centerCode));
@@ -725,7 +790,7 @@ export async function handleKidneyTransplantProgramFhir(req: Request, centerCode
 }
 
 export async function handleDialysisFacilities(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   const parsed = parseDialysisSearchParams(new URL(req.url).searchParams);
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
@@ -739,7 +804,7 @@ export async function handleDialysisFacilities(req: Request): Promise<Response> 
 }
 
 export async function handleDialysisFacility(req: Request, facilityId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const facility = await getDialysisFacility(decodeURIComponent(facilityId));
@@ -751,7 +816,7 @@ export async function handleDialysisFacility(req: Request, facilityId: string): 
 }
 
 export async function handleDialysisFacilityFhir(req: Request, facilityId: string): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   try {
     const facility = await getDialysisFacility(decodeURIComponent(facilityId));
@@ -912,12 +977,251 @@ export async function handleCancelSdohReferralDraft(req: Request, referralDraftI
   return Response.json({ ok: true }, { status: 200 });
 }
 
+// ---------------------------------------------------------------------------
+// Patient-specific care coordination
+// ---------------------------------------------------------------------------
+
+function noStoreJson(body: unknown, status = 200): Response {
+  return Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
+}
+
+export async function handleGetCareCoordination(req: Request, patientId: string): Promise<Response> {
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  try {
+    const raw = await loadCareCoordinationData(patientId);
+    return noStoreJson(buildCareCoordinationPlan(raw));
+  } catch {
+    return noStoreJson({ error: "Care-coordination data could not be retrieved." }, 502);
+  }
+}
+
+export async function handleCareCoordinationProposals(req: Request, patientId: string): Promise<Response> {
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  try {
+    const raw = await loadCareCoordinationData(patientId);
+    const model = buildCareCoordinationPlan(raw);
+    return noStoreJson({
+      proposals: model.pathways.filter(pathway => pathway.requiresClinicianApproval),
+      insufficientEvidence: model.dataStatus.insufficientEvidence,
+    });
+  } catch {
+    return noStoreJson({ error: "Care-coordination proposals could not be evaluated." }, 502);
+  }
+}
+
+export async function handlePreviewCareCoordinationReferral(req: Request, patientId: string): Promise<Response> {
+  const session = requireStaff(req);
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const parsed = await readJsonBody<ReferralActionBody>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await previewCareCoordinationReferral(patientId, session.displayName, parsed.body);
+  return result.ok ? noStoreJson(result.preview) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handleConfirmCareCoordinationReferral(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) {
+    return getSessionFromRequest(req)
+      ? forbiddenResponse("Only an authorized clinician can approve and submit a referral.")
+      : unauthorizedResponse();
+  }
+  const parsed = await readJsonBody<ReferralActionBody>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await confirmCareCoordinationReferral(patientId, session.displayName, parsed.body);
+  if (!result.ok) return noStoreJson({ error: result.error }, result.status);
+  return noStoreJson({ ok: true, response: result.responseBundle }, 201);
+}
+
+export async function handleUpdateCareCoordinationTask(req: Request, patientId: string, taskId: string): Promise<Response> {
+  const session = requireStaff(req);
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const parsed = await readJsonBody<TaskActionBody>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await updateCoordinationTask(patientId, taskId, session.displayName, parsed.body);
+  return result.ok ? noStoreJson(result.task) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handleCreateCareCoordinationCommunication(req: Request, patientId: string): Promise<Response> {
+  const session = requireStaff(req);
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const parsed = await readJsonBody<{
+    recipientReference?: string;
+    recipientDisplay?: string;
+    subject?: string;
+    message?: string;
+  }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createCoordinationCommunication(patientId, session.displayName, parsed.body);
+  return result.ok ? noStoreJson(result.communication, 201) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handleGetCareCoordinationTimeline(req: Request, patientId: string): Promise<Response> {
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  try {
+    const raw = await loadCareCoordinationData(patientId);
+    return noStoreJson({ timeline: buildCareCoordinationPlan(raw).timeline });
+  } catch {
+    return noStoreJson({ error: "The coordination timeline could not be retrieved." }, 502);
+  }
+}
+
+export async function handleGetSleSystemsReview(req: Request, patientId: string): Promise<Response> {
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  try {
+    return noStoreJson(buildSleSystemsReviewModel(await loadSleSystemsReviewData(patientId)));
+  } catch {
+    return noStoreJson({ error: "The patient-specific SLE systems review could not be retrieved." }, 502);
+  }
+}
+
+export async function handleSubmitSleSystemAssessment(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can complete a structured SLE assessment.") : unauthorizedResponse();
+  const parsed = await readJsonBody<SubmitSleAssessmentInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await submitSleSystemAssessment(patientId, parsed.body, session.displayName);
+  if (!result.ok) return noStoreJson({ error: result.error }, result.status);
+  return noStoreJson({ ok: true, questionnaireResponseId: result.response.id }, 201);
+}
+
+export async function handleCreateSleSystemTask(req: Request, patientId: string): Promise<Response> {
+  const session = requireStaff(req);
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const parsed = await readJsonBody<{ systemId?: unknown; description?: unknown }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createSleSystemReviewTask(patientId, parsed.body.systemId, parsed.body.description, session.displayName);
+  if (!result.ok) return noStoreJson({ error: result.error }, result.status);
+  return noStoreJson({ taskId: result.taskId }, 201);
+}
+
+// ---------------------------------------------------------------------------
+// Patient portal: patient identity is always resolved from the signed session.
+// ---------------------------------------------------------------------------
+
+type PortalSection =
+  | "summary"
+  | "lupus"
+  | "labs"
+  | "nutrition"
+  | "care-plan"
+  | "appointments"
+  | "medications"
+  | "care-team"
+  | "messages"
+  | "documents";
+
+function portalAccessError(req: Request): Response {
+  return getSessionFromRequest(req) ? forbiddenResponse("This route requires an authorized patient session.") : unauthorizedResponse();
+}
+
+export async function handleGetPortalSection(req: Request, section: PortalSection, resultId?: string): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  try {
+    const model = buildPatientPortalModel(await loadPatientPortalData(session.patientId));
+    if (section === "summary") return noStoreJson({ patient: model.patient, dashboard: model.dashboard, dataStatus: model.dataStatus });
+    if (section === "lupus") return noStoreJson({ patient: model.patient, systems: model.lupusOverview, dataStatus: model.dataStatus });
+    if (section === "labs") {
+      if (!resultId) return noStoreJson({ patient: model.patient, results: model.labs, dataStatus: model.dataStatus });
+      const result = model.labs.find(item => item.id === resultId);
+      return result ? noStoreJson({ patient: model.patient, result, dataStatus: model.dataStatus }) : noStoreJson({ error: "Lab result not found." }, 404);
+    }
+    if (section === "nutrition") return noStoreJson({ patient: model.patient, guidance: model.nutrition, mealIdeas: model.mealIdeas, carePlan: model.carePlan, careTeam: model.careTeam, dataStatus: model.dataStatus });
+    if (section === "care-plan") return noStoreJson({ patient: model.patient, pathways: model.carePlan, dataStatus: model.dataStatus });
+    if (section === "appointments") return noStoreJson({ patient: model.patient, appointments: model.appointments, dataStatus: model.dataStatus });
+    if (section === "medications") return noStoreJson({ patient: model.patient, medications: model.medications, dataStatus: model.dataStatus });
+    if (section === "care-team") return noStoreJson({ patient: model.patient, members: model.careTeam, dataStatus: model.dataStatus });
+    if (section === "messages") return noStoreJson({ patient: model.patient, messages: model.messages, dataStatus: model.dataStatus });
+    return noStoreJson({ patient: model.patient, documents: model.documents, dataStatus: model.dataStatus });
+  } catch {
+    return noStoreJson({ error: "We could not load this part of your record." }, 502);
+  }
+}
+
+export async function handlePortalAppointmentChangeRequest(req: Request): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  const parsed = await readJsonBody<{ appointmentId?: unknown; requestType?: unknown; message?: unknown }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createAppointmentChangeRequest(session.patientId, parsed.body);
+  return result.ok ? noStoreJson({ ok: true, requestId: result.resource.id }, 201) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handlePortalRefillRequest(req: Request): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  const parsed = await readJsonBody<{ medicationRequestId?: unknown; message?: unknown }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createRefillRequest(session.patientId, parsed.body);
+  return result.ok ? noStoreJson({ ok: true, requestId: result.resource.id }, 201) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handlePortalNutritionSupportRequest(req: Request): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  const parsed = await readJsonBody<{ topic?: unknown; message?: unknown }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createNutritionSupportRequest(session.patientId, parsed.body);
+  return result.ok ? noStoreJson({ ok: true, requestId: result.resource.id }, 201) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handlePortalCreateMessage(req: Request): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  const parsed = await readJsonBody<{ category?: unknown; subject?: unknown; message?: unknown }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createPatientPortalMessage(session.patientId, parsed.body);
+  return result.ok ? noStoreJson({ ok: true, messageId: result.resource.id }, 201) : noStoreJson({ error: result.error }, result.status);
+}
+
+export async function handlePortalReport(req: Request): Promise<Response> {
+  const session = requirePatient(req);
+  if (!session?.patientId) return portalAccessError(req);
+  try {
+    const model = buildPatientPortalModel(await loadPatientPortalData(session.patientId));
+    const lines = [
+      "LoopedIn patient-friendly care summary",
+      `Patient: ${model.patient.displayName}`,
+      `Report date: ${new Date().toLocaleDateString("en-US")}`,
+      "",
+      "Information from your medical record",
+      ...model.labs.slice(0, 8).map(result => `${result.plainLanguageName}: ${result.value ?? "Not available"}${result.unit ? ` ${result.unit}` : ""} (${result.date ?? "date unavailable"})`),
+      "",
+      "Upcoming next steps",
+      ...(model.dashboard.today.length ? model.dashboard.today.map(step => `- ${step.title}: ${step.status}`) : ["- No action is currently listed in the available care plan."]),
+      "",
+      "Upcoming appointments",
+      ...(model.appointments.filter(item => !item.past).length
+        ? model.appointments.filter(item => !item.past).map(item => `- ${item.title}: ${item.start ?? "Scheduling in progress"}`)
+        : ["- No upcoming appointment is available in this record."]),
+      "",
+      "Current medications",
+      ...model.medications.filter(item => item.status === "active").map(item => `- ${item.name}${item.dose ? `, ${item.dose}` : ""}${item.frequency ? `, ${item.frequency}` : ""}`),
+      "",
+      "General education and safety",
+      "This summary does not replace medical advice. Do not change medicines or diet restrictions without speaking with your care team.",
+      `Source updated: ${model.dataStatus.lastUpdatedAt}`,
+      model.patient.synthetic ? "Synthetic demonstration data; not a real patient record." : "",
+    ].filter(Boolean);
+    return new Response(lines.join("\n"), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="luppedin-care-summary.txt"',
+        "Cache-Control": "private, no-store",
+      },
+    });
+  } catch {
+    return noStoreJson({ error: "The report could not be generated." }, 502);
+  }
+}
+
 export async function handleCdsDiscovery(): Promise<Response> {
   return Response.json(CDS_SERVICES_DISCOVERY, { status: 200 });
 }
 
 export async function handleCdsOrderSelect(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   let body: CdsHooksRequestBody;
   try {
@@ -937,7 +1241,7 @@ export async function handleCdsOrderSelect(req: Request): Promise<Response> {
 }
 
 export async function handleCdsOrderSign(req: Request): Promise<Response> {
-  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+  if (!requireStaff(req)) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
 
   let body: CdsHooksRequestBody;
   try {

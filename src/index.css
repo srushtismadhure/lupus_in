@@ -17,3 +17,35 @@
     animation: none !important;
   }
 }
+
+.sle-damage-border {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    repeating-linear-gradient(135deg, #65408a 0 6px, #b9dcf4 6px 12px) border-box;
+}
+
+@media (forced-colors: active) {
+  .sle-damage-border {
+    border: 3px double CanvasText;
+  }
+}
+
+.portal-text-large .portal-root {
+  font-size: 112.5%;
+}
+
+@media print {
+  .portal-root aside,
+  .portal-root > div > header,
+  .portal-root nav {
+    display: none !important;
+  }
+  .portal-root > div {
+    padding-left: 0 !important;
+  }
+  .portal-root main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}

@@ -6,7 +6,11 @@ import type { DemoRole } from "@/lib/auth-client";
 import { useAuth } from "./AuthProvider";
 import { MADISON_GRACE_PATIENT_ID } from "@/lib/madison-class-iv-data";
 
-const ROLE_HOME: Record<DemoRole, string> = { nurse: "/nurse", clinician: `/patients/${MADISON_GRACE_PATIENT_ID}` };
+const ROLE_HOME: Record<DemoRole, string> = {
+  nurse: "/nurse",
+  clinician: `/patients/${MADISON_GRACE_PATIENT_ID}`,
+  patient: "/portal",
+};
 
 export function LoginForm() {
   const { startDemoSession, logout } = useAuth();
@@ -67,6 +71,9 @@ export function LoginForm() {
         </Button>
         <Button type="button" variant="outline" className="w-full" onClick={() => handleEnterDemo("clinician")} disabled={submitting}>
           {submittingRole === "clinician" ? "Opening demo..." : "Enter as Clinician"}
+        </Button>
+        <Button type="button" variant="secondary" className="min-h-11 w-full" onClick={() => handleEnterDemo("patient")} disabled={submitting}>
+          {submittingRole === "patient" ? "Opening patient portal..." : "Enter as Madison (Patient)"}
         </Button>
       </div>
 

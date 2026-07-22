@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { MADISON_GRACE_PATIENT_ID } from "./madison-class-iv-data.js";
 
 /**
  * Demonstration authentication only. This is a public, one-click synthetic
@@ -15,20 +16,26 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * never from a client-supplied value.
  */
 
-export const DEMO_ROLES = ["nurse", "clinician"] as const;
+export const DEMO_ROLES = ["nurse", "clinician", "patient"] as const;
 export type DemoRole = (typeof DEMO_ROLES)[number];
+export type StaffRole = Exclude<DemoRole, "patient">;
 
 export function isDemoRole(value: unknown): value is DemoRole {
   return typeof value === "string" && (DEMO_ROLES as readonly string[]).includes(value);
 }
 
-export const DEMO_USERS: Record<DemoRole, { email: string; displayName: string }> = {
+export const DEMO_USERS: Record<DemoRole, { email: string; displayName: string; patientId?: string }> = {
   nurse: { email: "rn@nephra.app", displayName: "LoopedIn RN Care Coordinator" },
   clinician: { email: "demo@nephra.app", displayName: "LoopedIn Demo Clinician" },
+  patient: {
+    email: "madison@nephra.app",
+    displayName: "Madison Grace",
+    patientId: MADISON_GRACE_PATIENT_ID,
+  },
 };
 
 const SESSION_COOKIE_NAME = "nephra_session";
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+export const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const DEMO_ENVIRONMENT = "synthetic-demo";
 
 interface AuthConfig {
@@ -71,6 +78,7 @@ export interface SessionPayload {
   email: string;
   displayName: string;
   role: DemoRole;
+  patientId?: string;
   environment: string;
   exp: number;
 }
@@ -93,6 +101,7 @@ export function verifySessionToken(token: string | undefined | null): SessionPay
   try {
     const payload = JSON.parse(base64UrlDecode(encodedPayload)) as SessionPayload;
     if (typeof payload.email !== "string" || typeof payload.exp !== "number" || !isDemoRole(payload.role)) return null;
+    if (payload.role === "patient" && payload.patientId !== DEMO_USERS.patient.patientId) return null;
     if (Date.now() > payload.exp) return null;
     return payload;
   } catch {
@@ -123,6 +132,15 @@ export function requireRole(req: Request, ...allowedRoles: DemoRole[]): SessionP
   if (!session) return null;
   if (!allowedRoles.includes(session.role)) return null;
   return session;
+}
+
+export function requireStaff(req: Request): SessionPayload | null {
+  return requireRole(req, "nurse", "clinician");
+}
+
+export function requirePatient(req: Request): SessionPayload | null {
+  const session = requireRole(req, "patient");
+  return session?.patientId ? session : null;
 }
 
 export function buildSessionCookie(token: string): string {

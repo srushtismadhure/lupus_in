@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Building2, LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical } from "lucide-react";
+import { Building2, LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical, ScanSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import logo from "@/assets/images/logo.png";
@@ -36,6 +36,7 @@ export function AppSidebar() {
   const navItems = [
     { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
     { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
+    ...(user?.role === "clinician" ? [{ to: "/sle-systems-review", label: "SLE Systems Review", icon: ScanSearch, enabled: true, end: false }] : []),
     { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
     { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
     { to: "/kidney-services", label: "Kidney Services", icon: Building2, enabled: true, end: false },
@@ -103,7 +104,7 @@ export function AppSidebar() {
                 connectionStatus === "checking" && "bg-white/30",
               )}
             />
-            <span className="hidden text-[#D7ECFA] md:inline">SMART on FHIR</span>
+            <span className="hidden text-[#D7ECFA] md:inline">FHIR data source</span>
           </div>
           <p className="mt-0.5 hidden text-xs font-semibold text-[#F7FBFF] md:block">
             {connectionStatus === "connected" && "Connected"}

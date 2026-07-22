@@ -1,14 +1,16 @@
-export type DemoRole = "nurse" | "clinician";
+export type DemoRole = "nurse" | "clinician" | "patient";
 
 export interface DemoUser {
   email: string;
   displayName: string;
   role: DemoRole;
+  patientId?: string;
 }
 
 export interface SessionState {
   authenticated: boolean;
   user?: DemoUser;
+  expiresAt?: number;
 }
 
 export async function getSession(): Promise<SessionState> {
@@ -43,4 +45,10 @@ export async function startDemoSession(role: DemoRole): Promise<DemoLoginResult>
 
 export async function logout(): Promise<void> {
   await fetch("/api/logout", { method: "POST", credentials: "include" });
+}
+
+export async function extendSession(): Promise<SessionState> {
+  const response = await fetch("/api/session/extend", { method: "POST", credentials: "include" });
+  if (!response.ok) return { authenticated: false };
+  return (await response.json()) as SessionState;
 }

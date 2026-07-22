@@ -1,8 +1,10 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import logo from "@/assets/images/logo.png";
+import { useSearchParams } from "react-router-dom";
 
 export function LoginPage() {
+  const [searchParams] = useSearchParams();
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
       <div className="flex flex-col justify-center gap-6 bg-[#2B123E] px-10 py-16 text-white md:px-16">
@@ -28,6 +30,7 @@ export function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
+            {searchParams.get("loggedOut") === "1" && <p role="status" className="mb-4 rounded-lg border border-[#BFDCC9] bg-[#EAF5EE] px-3 py-2 text-sm font-semibold text-[#2F6F47]">You have been logged out.</p>}
             <LoginForm />
           </CardContent>
         </Card>

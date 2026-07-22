@@ -53,6 +53,10 @@ export function searchFhirResource<T>(resourceType: string, query: string) {
   return fhirServerRequest<T>(`/${resourceType}?${query}`, { method: "GET" });
 }
 
+export function executeFhirTransaction<T = fhir4.Bundle | fhir4.OperationOutcome>(bundle: fhir4.Bundle) {
+  return fhirServerRequest<T>("/", { method: "POST", body: bundle });
+}
+
 /** Extracts a resource ID from a Location header such as `.../Patient/abc123/_history/1`. */
 export function extractIdFromLocation(location: string | null): string | null {
   if (!location) return null;

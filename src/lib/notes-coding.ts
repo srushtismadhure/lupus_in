@@ -166,6 +166,16 @@ function draftView(documentId: string, payload: ClinicalNoteDraftPayload): Clini
   };
 }
 
+export function parseClinicalNoteDraftDocument(document: fhir4.DocumentReference): ClinicalNoteDraftView | null {
+  const isClinicalNoteDraft = document.type?.coding?.some(
+    coding => coding.system === DOCUMENT_TYPE_SYSTEM && coding.code === DOCUMENT_TYPE_CODE,
+  );
+  const data = document.content?.[0]?.attachment?.data;
+  if (!isClinicalNoteDraft || !document.id || !data) return null;
+  const payload = decodePayload(data);
+  return payload ? draftView(document.id, { ...payload, draftId: document.id }) : null;
+}
+
 async function createProvenance(
   targetReferences: string[],
   activity: string,
@@ -1150,6 +1160,6 @@ export async function createPatientTask(
   if (created.status !== 201 || isOperationOutcome(created.body) || !created.body.id) {
     return { ok: false, status: created.status, error: "Unable to create Task." };
   }
-  await createProvenance([`Task/${created.body.id}`], "Prior-authorization or SDOH follow-up Task created", actorDisplay);
+  await createProvenance([`Task/${created.body.id}`], "Clinical follow-up Task created", actorDisplay);
   return { ok: true, taskId: created.body.id };
 }
