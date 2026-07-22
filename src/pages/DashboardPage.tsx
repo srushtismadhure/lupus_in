@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { getClinicianWorklist } from "@/lib/worklist-client";
 import type { ClinicianWorklistResponse } from "@/lib/worklist-types";
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState<ClinicianWorklistResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +35,8 @@ export function DashboardPage() {
 
   return (
     <AppShell
-      title="LuppedIn — Lupus Nephritis Care Dashboard"
-      subtitle="Prioritize renal changes, overdue monitoring, and unresolved follow-up."
+      title="Welcome Back, Dr. Madhure!"
+      subtitle="LuppedIn doctor view for renal changes, overdue monitoring, and unresolved follow-up."
     >
       <div className="mb-5 flex items-center justify-end">
         <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)} disabled={loading}>
@@ -84,12 +86,48 @@ export function DashboardPage() {
           )}
 
           <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <SummaryStatCard label="Total patients" value={data.summary.totalPatients} accent="purple" />
-            <SummaryStatCard label="Lupus nephritis" value={data.summary.lupusNephritisPatients} accent="purple" />
-            <SummaryStatCard label="Needing review" value={data.summary.needsReview} accent="red" />
-            <SummaryStatCard label="Monitoring overdue" value={data.summary.monitoringOverdue} accent="amber" />
-            <SummaryStatCard label="Open high-priority tasks" value={data.summary.openHighPriorityTasks} accent="amber" />
-            <SummaryStatCard label="Insufficient data" value={data.summary.insufficientData} accent="neutral" />
+            <SummaryStatCard
+              label="Total patients"
+              value={data.summary.totalPatients}
+              accent="purple"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Lupus nephritis"
+              value={data.summary.lupusNephritisPatients}
+              accent="purple"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Needing review"
+              value={data.summary.needsReview}
+              accent="red"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Monitoring overdue"
+              value={data.summary.monitoringOverdue}
+              accent="amber"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Open high-priority tasks"
+              value={data.summary.openHighPriorityTasks}
+              accent="amber"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Insufficient data"
+              value={data.summary.insufficientData}
+              accent="neutral"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
           </div>
 
           <section>
