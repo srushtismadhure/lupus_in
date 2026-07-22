@@ -214,9 +214,10 @@ function evaluateSuggestion(conditions: fhir4.Condition[], observations: fhir4.O
   if (hasRenalDiagnosis) matchedReasons.push(MNT_SUGGESTION_RULE_LABELS.renalDiagnosis);
 
   const systolic = getLatestObservation(filterObservationsByLoinc(observations, LOINC_CODES.systolicBloodPressure));
+  const systolicInterpretation = systolic ? getObservationInterpretation(systolic) : undefined;
   const bpConcern =
     (systolic?.valueQuantity?.value ?? 0) > BP_CONCERN_SYSTOLIC_THRESHOLD ||
-    (getObservationInterpretation(systolic as fhir4.Observation) ?? "").toLowerCase().includes("high");
+    (systolicInterpretation ?? "").toLowerCase().includes("high");
   if (bpConcern) matchedReasons.push(MNT_SUGGESTION_RULE_LABELS.bloodPressureConcern);
 
   const potassium = getLatestObservation(filterObservationsByLoinc(observations, LOINC_POTASSIUM));

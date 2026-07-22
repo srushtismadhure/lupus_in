@@ -99,9 +99,9 @@ export async function proxyFhirRequest(req: Request, fhirSubPath: string): Promi
   }
 
   const responseHeaders = new Headers();
-  for (const [key, value] of upstreamResponse.headers) {
+  upstreamResponse.headers.forEach((value, key) => {
     if (HOP_BY_HOP_RESPONSE_HEADERS.has(key.toLowerCase())) responseHeaders.set(key, value);
-  }
+  });
 
   return new Response(upstreamResponse.body, { status: upstreamResponse.status, headers: responseHeaders });
 }

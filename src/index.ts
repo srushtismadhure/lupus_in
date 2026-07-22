@@ -1,55 +1,16 @@
 import { serve } from "bun";
 import index from "./index.html";
-import {
-  handleClinicianWorklist,
-  handleContactPatient,
-  handleCoordinateScheduling,
-  handleCreateMntReferral,
-  handleCreatePatient,
-  handleDeactivatePatient,
-  handleDeclineMntReferral,
-  handleDemoLogin,
-  handleDocumentBarrier,
-  handleGetMntState,
-  handleLogout,
-  handleModifyMntReferral,
-  handleNurseMntWorklist,
-  handleSendForSignature,
-  handleSession,
-  handleSignMntReferral,
-  handleUpdatePatient,
-  proxyFhirRequest,
-} from "./server/handlers";
+import { handleRequest } from "./server/router";
 
 // This file is the entry point for the Bun-native deployment target (local
 // dev via `bun --hot`, and containerized hosts like Railway/Render/Fly via
-// the Dockerfile). It's a thin router — all actual request handling lives in
-// ./server/handlers.ts, which is shared with the Vercel serverless functions
-// under /api for deployments that need that model instead.
+// the Dockerfile). All request handling is delegated to ./server/router.ts's
+// handleRequest(), which is the single implementation shared with the one
+// Vercel serverless function under /api for deployments that need that model.
 const server = serve({
   routes: {
-    "/fhir/*": req => proxyFhirRequest(req, new URL(req.url).pathname.replace(/^\/fhir/, "") || "/"),
-
-    "/api/demo-login": { POST: handleDemoLogin },
-    "/api/logout": { POST: handleLogout },
-    "/api/session": { GET: handleSession },
-
-    "/api/patients": { POST: handleCreatePatient },
-    "/api/patients/:patientId": { PUT: req => handleUpdatePatient(req, req.params.patientId) },
-    "/api/patients/:patientId/deactivate": { POST: req => handleDeactivatePatient(req, req.params.patientId) },
-
-    "/api/clinician-worklist": { GET: handleClinicianWorklist },
-    "/api/nurse/mnt-worklist": { GET: handleNurseMntWorklist },
-
-    "/api/mnt/patients/:patientId": { GET: req => handleGetMntState(req, req.params.patientId) },
-    "/api/mnt/referrals": { POST: handleCreateMntReferral },
-    "/api/mnt/referrals/:serviceRequestId/send-for-signature": { POST: req => handleSendForSignature(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/sign": { POST: req => handleSignMntReferral(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/decline": { POST: req => handleDeclineMntReferral(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/modify": { POST: req => handleModifyMntReferral(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/barrier": { POST: req => handleDocumentBarrier(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/contact": { POST: req => handleContactPatient(req, req.params.serviceRequestId) },
-    "/api/mnt/referrals/:serviceRequestId/schedule": { POST: req => handleCoordinateScheduling(req, req.params.serviceRequestId) },
+    "/fhir/*": handleRequest,
+    "/api/*": handleRequest,
 
     // Serve index.html for all unmatched routes.
     "/*": index,
