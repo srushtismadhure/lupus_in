@@ -249,6 +249,8 @@ export function SleSystemsReviewPage() {
               disabled={loadingPatients}
               onChange={event => setSearchParams({ patientId: event.target.value })}
             >
+              {loadingPatients && <option value="">Loading patients...</option>}
+              {!loadingPatients && patients.length === 0 && <option value="">No active patients available</option>}
               {patients.map(patient => <option key={patient.patient.id} value={patient.patient.id}>{patient.name}{patient.primaryConditionText ? ` - ${patient.primaryConditionText}` : ""}</option>)}
             </select>
           </div>

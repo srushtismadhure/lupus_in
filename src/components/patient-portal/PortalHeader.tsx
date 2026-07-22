@@ -23,7 +23,7 @@ export function PortalHeader() {
       <div className="min-w-0 lg:hidden"><p className="truncate font-semibold text-[#2B123E]">LoopedIn</p><p className="text-xs text-[#526172]">Patient portal</p></div>
       <div className="hidden min-w-0 lg:block"><p className="text-sm font-semibold text-[#1F2430]">Your health record</p><p className="text-xs text-[#526172]">Private patient view</p></div>
       <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" className="min-h-11 px-3"><a href="/portal/messages"><MessageCircle aria-hidden="true" /><span className="hidden sm:inline">Messages</span><span className="sr-only sm:hidden">Messages</span></a></Button>
+        <Button asChild variant="ghost" className="min-h-11 min-w-11 px-3"><a href="/portal/messages"><MessageCircle aria-hidden="true" /><span className="hidden sm:inline">Messages</span><span className="sr-only sm:hidden">Messages</span></a></Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="outline" className="min-h-11"><UserRound aria-hidden="true" /><span className="hidden max-w-[180px] truncate sm:inline">{user?.displayName ?? "My account"}</span><span className="sm:hidden">Account</span></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
@@ -42,4 +42,3 @@ export function PortalHeader() {
     </header>
   );
 }
-
