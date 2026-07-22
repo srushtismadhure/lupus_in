@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, FileText, MoreHorizontal, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,10 +13,11 @@ interface PatientHeaderProps {
   patient: fhir4.Patient;
   conditions: fhir4.Condition[];
   onCreateTask: () => void;
+  onAddClinicalNote?: () => void;
   onPatientUpdated: (patient: fhir4.Patient) => void;
 }
 
-export function PatientHeader({ patient, conditions, onCreateTask, onPatientUpdated }: PatientHeaderProps) {
+export function PatientHeader({ patient, conditions, onCreateTask, onAddClinicalNote, onPatientUpdated }: PatientHeaderProps) {
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
@@ -42,6 +43,12 @@ export function PatientHeader({ patient, conditions, onCreateTask, onPatientUpda
       </div>
 
       <div className="flex items-center gap-2">
+        {onAddClinicalNote && (
+          <Button size="sm" variant="outline" onClick={onAddClinicalNote}>
+            <FileText className="size-4" />
+            Add clinical note
+          </Button>
+        )}
         <Button size="sm" onClick={onCreateTask}>
           <Plus className="size-4" />
           Create task

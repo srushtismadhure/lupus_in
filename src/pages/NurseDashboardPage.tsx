@@ -33,7 +33,7 @@ export function NurseDashboardPage() {
 
   return (
     <AppShell
-      title="LuppedIn — Care Coordination"
+      title="LoopedIn — Care Coordination"
       subtitle="Medical nutrition therapy referral workflow and outreach queue."
     >
       <div className="mb-5 flex items-center justify-end">

@@ -7,6 +7,9 @@ import { NurseDashboardPage } from "@/pages/NurseDashboardPage";
 import { PatientsPage } from "@/pages/PatientsPage";
 import { OverviewPage } from "@/pages/OverviewPage";
 import { PatientDashboardPage } from "@/pages/PatientDashboardPage";
+import { MedicationManagementPage } from "@/pages/MedicationManagementPage";
+import { MedicationsOverviewPage } from "@/pages/MedicationsOverviewPage";
+import { NotesCodingPage } from "@/pages/NotesCodingPage";
 import "./index.css";
 
 /** Sends an authenticated user to the dashboard for their demo role. Unauthenticated users fall through to /login via ProtectedRoute. */
@@ -62,7 +65,63 @@ export function App() {
           }
         />
         <Route
+          path="/medications"
+          element={
+            <ProtectedRoute>
+              <MedicationsOverviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/patients/:patientId"
+          element={
+            <ProtectedRoute>
+              <PatientDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/medications"
+          element={
+            <ProtectedRoute>
+              <MedicationManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/notes-coding"
+          element={
+            <ProtectedRoute>
+              <NotesCodingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/renal-timeline"
+          element={
+            <ProtectedRoute>
+              <PatientDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/referrals"
+          element={
+            <ProtectedRoute>
+              <PatientDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/tasks"
+          element={
+            <ProtectedRoute>
+              <PatientDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:patientId/fhir-evidence"
           element={
             <ProtectedRoute>
               <PatientDashboardPage />

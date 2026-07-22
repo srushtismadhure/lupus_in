@@ -6,6 +6,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/fhir/:path*", "destination": "/api/fhir/:path*" },
+    { "source": "/cds-services", "destination": "/api/cds-services" },
+    { "source": "/cds-services/:path*", "destination": "/api/cds-services/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

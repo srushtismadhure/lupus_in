@@ -23,8 +23,8 @@ export function isDemoRole(value: unknown): value is DemoRole {
 }
 
 export const DEMO_USERS: Record<DemoRole, { email: string; displayName: string }> = {
-  nurse: { email: "rn@nephra.app", displayName: "LuppedIn RN Care Coordinator" },
-  clinician: { email: "demo@nephra.app", displayName: "LuppedIn Demo Clinician" },
+  nurse: { email: "rn@nephra.app", displayName: "LoopedIn RN Care Coordinator" },
+  clinician: { email: "demo@nephra.app", displayName: "LoopedIn Demo Clinician" },
 };
 
 const SESSION_COOKIE_NAME = "nephra_session";

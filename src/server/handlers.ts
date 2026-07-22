@@ -43,6 +43,50 @@ import {
   type MntActionResult,
 } from "../lib/mnt.js";
 import type { PatientWillingness } from "../lib/mnt-types.js";
+import {
+  evaluateMedicationSafety,
+  cdsHooksResponse,
+  persistDetectedIssuesFromEvaluation,
+  CDS_SERVICES_DISCOVERY,
+  evaluateRenalPatientView,
+  type CdsHooksRequestBody,
+} from "../lib/cds-hooks.js";
+import {
+  createDraftMedicationRequest,
+  createMedicationAssessment,
+  createMedicationStatement,
+  getPatientMedicationState,
+  holdMedicationRequest,
+  replaceMedicationRequest,
+  resolveDetectedIssue,
+  signMedicationRequest,
+  stopMedicationRequest,
+  type CreateDraftMedicationInput,
+  type MedicationActionResult,
+  type SymptomAnswerInput,
+} from "../lib/medications.js";
+import {
+  analyzeClinicalNote,
+  approveClinicalConcept,
+  approveSdohReferralDraft,
+  buildPriorAuthReadiness,
+  cancelSdohReferralDraft,
+  createClinicalNoteDraft,
+  createPatientTask,
+  createSdohReferralDraft,
+  finalizeClinicalNoteDraft,
+  loadClinicalNoteDraft,
+  rejectClinicalConcept,
+  saveClinicalNoteDraft,
+} from "../lib/notes-coding.js";
+import type {
+  AnalyzeClinicalNoteInput,
+  ApproveConceptInput,
+  CreatePriorAuthTaskInput,
+  RejectConceptInput,
+  SaveClinicalNoteInput,
+  SdohReferralDraftInput,
+} from "../lib/notes-coding-types.js";
 
 const HOP_BY_HOP_RESPONSE_HEADERS = new Set(["content-type", "location", "content-location", "etag", "last-modified"]);
 const FORWARDED_REQUEST_HEADERS = ["if-match", "if-none-match", "if-modified-since", "prefer"];
@@ -434,4 +478,413 @@ export async function handleCoordinateScheduling(req: Request, serviceRequestId:
     nurseDisplay: session.displayName,
   });
   return mntActionResponse(result);
+}
+
+// ---------------------------------------------------------------------------
+// Medication management
+// ---------------------------------------------------------------------------
+
+function medicationActionResponse(result: MedicationActionResult): Response {
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.medicationRequest, { status: 200 });
+}
+
+export async function handleGetMedicationState(req: Request, patientId: string): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  const patientResult = await readFhirResource<fhir4.Patient | fhir4.OperationOutcome>("Patient", patientId);
+  if (patientResult.status !== 200 || isOperationOutcome(patientResult.body)) {
+    return Response.json(patientResult.body, { status: patientResult.status });
+  }
+
+  const conditionsResult = await searchFhirResource<fhir4.Bundle>("Condition", `patient=${encodeURIComponent(patientId)}`);
+  const conditions = (conditionsResult.body?.entry ?? [])
+    .map(e => e.resource)
+    .filter((r): r is fhir4.Condition => !!r && r.resourceType === "Condition")
+    .filter(c => referencesPatient(c.subject, patientId));
+
+  const state = await getPatientMedicationState(patientResult.body, conditions);
+  return Response.json(state, { status: 200 });
+}
+
+export async function handleCreateMedicationDraft(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can create a medication order.") : unauthorizedResponse();
+
+  let body: Partial<CreateDraftMedicationInput>;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.medicationText) return Response.json({ error: "medicationText is required." }, { status: 400 });
+
+  const result = await createDraftMedicationRequest({ ...body, medicationText: body.medicationText, patientId, prescriberDisplay: session.displayName });
+  return medicationActionResponse(result);
+}
+
+export async function handleSignMedicationRequest(req: Request, id: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can sign a medication order.") : unauthorizedResponse();
+
+  const result = await signMedicationRequest(id, session.displayName);
+  return medicationActionResponse(result);
+}
+
+export async function handleHoldMedicationRequest(req: Request, id: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can pause a medication order.") : unauthorizedResponse();
+
+  let body: { reason?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.reason) return Response.json({ error: "A hold reason is required." }, { status: 400 });
+
+  const result = await holdMedicationRequest(id, body.reason, session.displayName);
+  return medicationActionResponse(result);
+}
+
+export async function handleStopMedicationRequest(req: Request, id: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can stop a medication order.") : unauthorizedResponse();
+
+  let body: { reason?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.reason) return Response.json({ error: "A stop reason is required." }, { status: 400 });
+
+  const result = await stopMedicationRequest(id, body.reason, session.displayName);
+  return medicationActionResponse(result);
+}
+
+export async function handleReplaceMedicationRequest(req: Request, id: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can replace a medication order.") : unauthorizedResponse();
+
+  let body: Partial<CreateDraftMedicationInput>;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const result = await replaceMedicationRequest(id, body, session.displayName);
+  return medicationActionResponse(result);
+}
+
+export async function handleCreateMedicationStatement(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  let body: { medicationRequestId?: string; medicationText?: string; status?: fhir4.MedicationStatement["status"]; doseText?: string; note?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.medicationText || !body.status) return Response.json({ error: "medicationText and status are required." }, { status: 400 });
+
+  const result = await createMedicationStatement({
+    patientId,
+    medicationRequestId: body.medicationRequestId,
+    medicationText: body.medicationText,
+    status: body.status,
+    doseText: body.doseText,
+    note: body.note,
+    actorDisplay: session.displayName,
+  });
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json({ id: result.id }, { status: 201 });
+}
+
+export async function handleCreateMedicationAssessment(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  let body: { answers?: SymptomAnswerInput[] };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.answers || body.answers.length === 0) return Response.json({ error: "At least one symptom answer is required." }, { status: 400 });
+
+  const result = await createMedicationAssessment({ patientId, answers: body.answers, actorDisplay: session.displayName });
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json({ id: result.id }, { status: 201 });
+}
+
+export async function handleResolveDetectedIssue(req: Request, id: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can resolve a medication safety conflict.") : unauthorizedResponse();
+
+  let body: { action?: "modify" | "cancel" | "continue" | "create-task"; reason?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body.action || !body.reason) return Response.json({ error: "action and reason are required." }, { status: 400 });
+
+  const result = await resolveDetectedIssue({ id, action: body.action, reason: body.reason, actorDisplay: session.displayName });
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json({ ok: true }, { status: 200 });
+}
+
+export async function handleMedicationSafetyEvaluate(req: Request): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  let body: CdsHooksRequestBody & { patientId?: string; draftMedicationRequest?: fhir4.MedicationRequest };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const patientId = body.patientId ?? body.context?.patientId;
+  const draft = body.draftMedicationRequest;
+  if (!patientId || !draft) return Response.json({ error: "patientId and draftMedicationRequest are required." }, { status: 400 });
+
+  const evaluation = await evaluateMedicationSafety(patientId, [draft]);
+  const persisted = await persistDetectedIssuesFromEvaluation(patientId, evaluation);
+  return Response.json({ ...cdsHooksResponse(evaluation), conflicts: persisted }, { status: 200 });
+}
+
+// ---------------------------------------------------------------------------
+// Clinical notes, coding review, prior authorization readiness, and SDOH referrals
+// ---------------------------------------------------------------------------
+
+async function readJsonBody<T>(req: Request): Promise<{ ok: true; body: T } | { ok: false; response: Response }> {
+  try {
+    return { ok: true, body: (await req.json()) as T };
+  } catch {
+    return { ok: false, response: Response.json({ error: "Invalid JSON body" }, { status: 400 }) };
+  }
+}
+
+export async function handleCreateClinicalNoteDraft(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can save clinical-note coding drafts.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<SaveClinicalNoteInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createClinicalNoteDraft(patientId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.draft, { status: 201 });
+}
+
+export async function handleAnalyzeClinicalNote(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can analyze notes for clinical coding.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<AnalyzeClinicalNoteInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await analyzeClinicalNote(patientId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.response, { status: 200 });
+}
+
+export async function handleSaveClinicalNoteDraft(req: Request, draftId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can save clinical-note coding drafts.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<SaveClinicalNoteInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await saveClinicalNoteDraft(draftId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.draft, { status: 200 });
+}
+
+export async function handleApproveClinicalConcept(req: Request, draftId: string, conceptId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can approve coding suggestions.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<ApproveConceptInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await approveClinicalConcept(draftId, conceptId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.response, { status: 200 });
+}
+
+export async function handleRejectClinicalConcept(req: Request, draftId: string, conceptId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can reject coding suggestions.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<RejectConceptInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await rejectClinicalConcept(draftId, conceptId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.response, { status: 200 });
+}
+
+export async function handleFinalizeClinicalNote(req: Request, draftId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can finalize clinical-note coding drafts.") : unauthorizedResponse();
+
+  const result = await finalizeClinicalNoteDraft(draftId, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.draft, { status: 200 });
+}
+
+export async function handlePriorAuthReadiness(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  const draftId = new URL(req.url).searchParams.get("draftId");
+  let draft;
+  if (draftId) {
+    const loaded = await loadClinicalNoteDraft(draftId);
+    if (!loaded.ok) return Response.json({ error: loaded.error }, { status: loaded.status });
+    if (loaded.draft.patientId !== patientId) return Response.json({ error: "Draft does not belong to this patient." }, { status: 409 });
+    draft = loaded.draft;
+  }
+  const readiness = await buildPriorAuthReadiness(patientId, draft);
+  return Response.json(readiness, { status: 200 });
+}
+
+export async function handleConfirmPriorAuthEvidence(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can confirm prior-authorization evidence.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<{ draftId?: string; rationale?: string }>(req);
+  if (!parsed.ok) return parsed.response;
+  const draftId = parsed.body.draftId;
+  if (!draftId) return Response.json({ error: "draftId is required." }, { status: 400 });
+  const loaded = await loadClinicalNoteDraft(draftId);
+  if (!loaded.ok) return Response.json({ error: loaded.error }, { status: loaded.status });
+  if (loaded.draft.patientId !== patientId) return Response.json({ error: "Draft does not belong to this patient." }, { status: 409 });
+
+  const readiness = await buildPriorAuthReadiness(patientId, loaded.draft);
+  return Response.json({ ok: true, rationale: parsed.body.rationale ?? readiness.reasonForEscalation, readiness }, { status: 200 });
+}
+
+export async function handleCreatePriorAuthTask(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  const parsed = await readJsonBody<CreatePriorAuthTaskInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createPatientTask(patientId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json({ taskId: result.taskId }, { status: 201 });
+}
+
+export async function handleCreateSdohReferralDraft(req: Request, patientId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  const parsed = await readJsonBody<SdohReferralDraftInput>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await createSdohReferralDraft(patientId, parsed.body, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result.referral, { status: 201 });
+}
+
+export async function handleApproveSdohReferralDraft(req: Request, referralDraftId: string): Promise<Response> {
+  const session = requireRole(req, "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse("Only an authorized clinician can approve community referral drafts.") : unauthorizedResponse();
+
+  const parsed = await readJsonBody<{ createFollowUpTask?: boolean }>(req);
+  if (!parsed.ok) return parsed.response;
+  const result = await approveSdohReferralDraft(referralDraftId, session.displayName, parsed.body.createFollowUpTask === true);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json(result, { status: 200 });
+}
+
+export async function handleCancelSdohReferralDraft(req: Request, referralDraftId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+
+  const result = await cancelSdohReferralDraft(referralDraftId, session.displayName);
+  if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+  return Response.json({ ok: true }, { status: 200 });
+}
+
+export async function handleCdsDiscovery(): Promise<Response> {
+  return Response.json(CDS_SERVICES_DISCOVERY, { status: 200 });
+}
+
+export async function handleCdsOrderSelect(req: Request): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  let body: CdsHooksRequestBody;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const patientId = body.context?.patientId;
+  const drafts = (body.context?.draftOrders?.entry ?? [])
+    .map(e => e.resource)
+    .filter((r): r is fhir4.MedicationRequest => !!r && r.resourceType === "MedicationRequest");
+  if (!patientId) return Response.json({ cards: [] }, { status: 200 });
+
+  const evaluation = await evaluateMedicationSafety(patientId, drafts);
+  return Response.json(cdsHooksResponse(evaluation), { status: 200 });
+}
+
+export async function handleCdsOrderSign(req: Request): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  let body: CdsHooksRequestBody;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const patientId = body.context?.patientId;
+  const drafts = (body.context?.draftOrders?.entry ?? [])
+    .map(e => e.resource)
+    .filter((r): r is fhir4.MedicationRequest => !!r && r.resourceType === "MedicationRequest");
+  if (!patientId) return Response.json({ cards: [] }, { status: 200 });
+
+  const evaluation = await evaluateMedicationSafety(patientId, drafts);
+  await persistDetectedIssuesFromEvaluation(patientId, evaluation);
+  return Response.json(cdsHooksResponse(evaluation), { status: 200 });
+}
+
+/**
+ * luppedin-patient-view — intentionally does NOT require our internal session cookie.
+ *
+ * This is deliberate, not an oversight: real CDS Hooks services are invoked by an
+ * external CDS Client (an EHR, or a public CDS Hooks sandbox for testing) that has
+ * no way to hold our app's session cookie. Production CDS Hooks deployments secure
+ * this boundary with the CDS Hooks spec's own client-authentication mechanism
+ * (signed JWT / OAuth), which is out of scope for this demo. The data here is
+ * synthetic demonstration data, consistent with the rest of this application.
+ */
+export async function handleCdsPatientView(req: Request): Promise<Response> {
+  let body: { hook?: string; hookInstance?: string; context?: { patientId?: string; userId?: string } };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  if (body.hook !== "patient-view") {
+    return Response.json({ error: "Unsupported hook. Expected 'patient-view'." }, { status: 400 });
+  }
+  if (!body.hookInstance) {
+    return Response.json({ error: "hookInstance is required." }, { status: 400 });
+  }
+  if (!body.context?.patientId) {
+    return Response.json({ error: "context.patientId is required." }, { status: 400 });
+  }
+
+  try {
+    const result = await evaluateRenalPatientView(body.context.patientId);
+    return Response.json({ cards: result.cards, debug: result.debug }, { status: 200 });
+  } catch (error) {
+    console.error("Renal CDS patient-view evaluation failed:", error instanceof Error ? error.message : "unknown error");
+    return Response.json({ error: "The renal CDS assessment could not be completed." }, { status: 502 });
+  }
 }

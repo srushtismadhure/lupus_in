@@ -11,6 +11,8 @@ const server = serve({
   routes: {
     "/fhir/*": handleRequest,
     "/api/*": handleRequest,
+    "/cds-services": handleRequest,
+    "/cds-services/*": handleRequest,
 
     // Serve index.html for all unmatched routes.
     "/*": index,

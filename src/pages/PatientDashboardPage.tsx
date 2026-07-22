@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PatientHeader } from "@/components/patients/PatientHeader";
+import { PatientSubNav } from "@/components/patients/PatientSubNav";
+import { MedicationManagementCard } from "@/components/medications/MedicationManagementCard";
 import { MetricCard } from "@/components/clinical/MetricCard";
 import { KidneyTrendChart } from "@/components/clinical/KidneyTrendChart";
 import { ImmunologicActivityCard } from "@/components/clinical/ImmunologicActivityCard";
@@ -13,6 +15,7 @@ import { TasksCard } from "@/components/clinical/TasksCard";
 import { CreateTaskDialog } from "@/components/clinical/CreateTaskDialog";
 import { NotConfiguredCard } from "@/components/clinical/NotConfiguredCard";
 import { FhirTransparencyPanel } from "@/components/clinical/FhirTransparencyPanel";
+import { AutomaticRenalCds } from "@/components/clinical/AutomaticRenalCds";
 import {
   getPatient,
   getPatientConditions,
@@ -49,6 +52,7 @@ function fromSettled<T>(result: PromiseSettledResult<T[]>): SectionState<T[]> {
 
 export function PatientDashboardPage() {
   const { patientId } = useParams<{ patientId: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,8 +136,11 @@ export function PatientDashboardPage() {
         patient={patient}
         conditions={conditions.data}
         onCreateTask={() => setCreateTaskOpen(true)}
+        onAddClinicalNote={() => patient.id && navigate(`/patients/${patient.id}/notes-coding`)}
         onPatientUpdated={() => setReloadKey(k => k + 1)}
       />
+
+      {patient.id && <PatientSubNav patientId={patient.id} />}
 
       {(conditions.failed || observations.failed || medicationRequests.failed || tasks.failed) && (
         <Alert variant="warning" className="mb-4">
@@ -145,6 +152,8 @@ export function PatientDashboardPage() {
           </AlertDescription>
         </Alert>
       )}
+
+      {patient.id && <AutomaticRenalCds patientId={patient.id} userId="PractitionerRole/demo-nephrologist" />}
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
@@ -197,6 +206,12 @@ export function PatientDashboardPage() {
         <ConditionsCard conditions={conditions.data} />
         <MedicationsCard medicationRequests={medicationRequests.data} />
       </div>
+
+      {patient.id && (
+        <div className="mb-6">
+          <MedicationManagementCard patientId={patient.id} />
+        </div>
+      )}
 
       <div className="mb-6">
         <TasksCard tasks={tasks.data} />

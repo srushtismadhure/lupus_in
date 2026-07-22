@@ -38,7 +38,7 @@ export function AppSidebar() {
     { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
     { to: "/overview", label: "Overview", icon: Activity, enabled: true, end: true },
     { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
-    { to: "#", label: "Medications", icon: Pill, enabled: false },
+    { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
     { to: "#", label: "Care Tasks", icon: ClipboardList, enabled: false },
     { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
     { to: "#", label: "FHIR Data", icon: Database, enabled: false },
@@ -49,8 +49,8 @@ export function AppSidebar() {
       <div className="sticky top-0 flex h-screen flex-col justify-between">
         <div>
           <div className="flex items-center gap-2 px-5 py-5 text-[#F7FBFF]">
-            <img src={logo} alt="LuppedIn" className="size-6" />
-            <span className="text-lg font-semibold">LuppedIn</span>
+            <img src={logo} alt="LoopedIn" className="size-6" />
+            <span className="text-lg font-semibold">LoopedIn</span>
           </div>
 
           <nav className="mt-2 flex flex-col gap-0.5 px-3">

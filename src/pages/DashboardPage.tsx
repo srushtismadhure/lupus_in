@@ -36,7 +36,7 @@ export function DashboardPage() {
   return (
     <AppShell
       title="Welcome Back, Dr. Madhure!"
-      subtitle="LuppedIn doctor view for renal changes, overdue monitoring, and unresolved follow-up."
+      subtitle="LoopedIn doctor view for renal changes, overdue monitoring, and unresolved follow-up."
     >
       <div className="mb-5 flex items-center justify-end">
         <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)} disabled={loading}>
