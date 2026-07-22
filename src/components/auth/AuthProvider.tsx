@@ -17,9 +17,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<DemoUser | undefined>(undefined);
 
   const refresh = useCallback(async () => {
-    const session = await getSession();
-    setStatus(session.authenticated ? "authenticated" : "unauthenticated");
-    setUser(session.user);
+    try {
+      const session = await getSession();
+      setStatus(session.authenticated ? "authenticated" : "unauthenticated");
+      setUser(session.user);
+    } catch {
+      // Never leave the UI stuck on "loading" — treat any unexpected failure as unauthenticated.
+      setStatus("unauthenticated");
+      setUser(undefined);
+    }
   }, []);
 
   useEffect(() => {

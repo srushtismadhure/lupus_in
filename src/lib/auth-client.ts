@@ -12,8 +12,16 @@ export interface SessionState {
 }
 
 export async function getSession(): Promise<SessionState> {
-  const response = await fetch("/api/session", { credentials: "include" });
-  return (await response.json()) as SessionState;
+  try {
+    const response = await fetch("/api/session", { credentials: "include" });
+    if (!response.ok) return { authenticated: false };
+    return (await response.json()) as SessionState;
+  } catch {
+    // Network failure or a non-JSON error response (e.g. a crashed serverless
+    // function) — fail safe to unauthenticated rather than throwing, so the
+    // caller never gets stuck waiting on a promise that never resolves.
+    return { authenticated: false };
+  }
 }
 
 export interface DemoLoginResult {
