@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, Activity, LineChart, Pill, ClipboardList, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import logo from "@/assets/images/logo.png";
@@ -36,7 +36,6 @@ export function AppSidebar() {
   const navItems = [
     { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
     { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
-    { to: "/overview", label: "Overview", icon: Activity, enabled: true, end: true },
     { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
     { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
     { to: "#", label: "Care Coordination", icon: ClipboardList, enabled: false },
