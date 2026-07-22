@@ -45,12 +45,12 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="w-60 shrink-0 self-stretch bg-[#2D123F] text-[#B9DCF4]">
+    <aside className="min-h-screen w-60 shrink-0 self-stretch bg-[#2B123E] text-[#D7ECFA]">
       <div className="sticky top-0 flex h-screen flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 px-5 py-5 text-[#F4FAFF]">
+          <div className="flex items-center gap-2 px-5 py-5 text-[#F7FBFF]">
             <img src={logo} alt="LuppedIn" className="size-6" />
-            <span className="text-lg font-semibold tracking-tight">LuppedIn</span>
+            <span className="text-lg font-semibold">LuppedIn</span>
           </div>
 
           <nav className="mt-2 flex flex-col gap-0.5 px-3">
@@ -62,8 +62,8 @@ export function AppSidebar() {
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-white/[0.07]",
-                      isActive ? "bg-[rgba(185,220,244,0.16)] text-[#F4FAFF]" : "bg-transparent text-[#B9DCF4]",
+                      "flex min-h-9 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-[3px] focus-visible:ring-[#78B7E3]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2B123E]",
+                      isActive ? "bg-[rgba(215,236,250,0.15)] text-[#F7FBFF]" : "bg-transparent text-[#D7ECFA]",
                     )
                   }
                 >
@@ -73,14 +73,14 @@ export function AppSidebar() {
               ) : (
                 <div
                   key={item.label}
-                  className="flex cursor-not-allowed items-center justify-between rounded-md bg-transparent px-3 py-2 text-sm text-[#B9DCF4]/45"
+                  className="flex min-h-9 cursor-not-allowed items-center justify-between rounded-lg bg-transparent px-3 py-2 text-sm text-[#D7ECFA]/60"
                   title="Coming later"
                 >
                   <span className="flex items-center gap-3">
                     <item.icon className="size-4" />
                     {item.label}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wide">Soon</span>
+                  <span className="text-[10px] uppercase">Soon</span>
                 </div>
               ),
             )}
@@ -89,7 +89,7 @@ export function AppSidebar() {
 
         <div className="border-t border-white/10 px-5 py-4">
           {user && (
-            <p className="mb-2 text-xs text-[#B9DCF4]">
+            <p className="mb-2 text-xs text-[#D7ECFA]">
               {user.role === "nurse" ? "RN Care Coordinator" : "Clinician"} · {user.displayName}
             </p>
           )}
@@ -102,9 +102,9 @@ export function AppSidebar() {
                 connectionStatus === "checking" && "bg-white/30",
               )}
             />
-            <span className="text-[#B9DCF4]">SMART on FHIR</span>
+            <span className="text-[#D7ECFA]">SMART on FHIR</span>
           </div>
-          <p className="mt-0.5 text-xs font-medium text-[#F4FAFF]">
+          <p className="mt-0.5 text-xs font-semibold text-[#F7FBFF]">
             {connectionStatus === "connected" && "Connected"}
             {connectionStatus === "error" && "Disconnected"}
             {connectionStatus === "checking" && "Checking..."}

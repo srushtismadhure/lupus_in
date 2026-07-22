@@ -87,9 +87,9 @@ export function PatientsPage() {
   return (
     <AppShell title="Patients" subtitle="FHIR-connected patient records">
       {loading && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="h-12 animate-pulse rounded-lg bg-[#EAF5FC]" />
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-[#E7F1F8]" />
           ))}
         </div>
       )}
@@ -107,31 +107,37 @@ export function PatientsPage() {
 
       {!loading && !error && data && (
         <>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search by name..."
-                className="max-w-sm"
+                className="h-10 w-full min-w-64 max-w-sm"
               />
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-2">
                 {FILTERS.map(f => (
                   <Button
                     key={f.value}
                     size="sm"
                     variant={filter === f.value ? "default" : "outline"}
+                    aria-pressed={filter === f.value}
                     onClick={() => setFilter(f.value)}
                   >
                     {f.label}
                   </Button>
                 ))}
               </div>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" checked={includeInactive} onChange={e => setIncludeInactive(e.target.checked)} />
+              <label className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#4F5E70]">
+                <input
+                  type="checkbox"
+                  checked={includeInactive}
+                  onChange={e => setIncludeInactive(e.target.checked)}
+                  className="size-4 rounded border-[#AFCFE7] accent-[#43205F] outline-none focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/35 focus-visible:ring-offset-2"
+                />
                 Include inactive
               </label>
-              <span className="text-sm text-muted-foreground">{filteredAllPatients.length} patients</span>
+              <span className="text-sm font-medium text-[#4F5E70]">{filteredAllPatients.length} patients</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -147,8 +153,8 @@ export function PatientsPage() {
           </div>
 
           {filteredAllPatients.length === 0 ? (
-            <Card className="border-dashed bg-[#F3F9FD]">
-              <CardContent className="text-center text-sm text-muted-foreground">No patients found.</CardContent>
+            <Card className="border-dashed bg-[#F8FBFD]">
+              <CardContent className="text-center text-sm font-medium text-[#4F5E70]">No patients found.</CardContent>
             </Card>
           ) : (
             <AllPatientsTable patients={filteredAllPatients} onEdit={setEditPatient} onDeactivate={setDeactivateTarget} />

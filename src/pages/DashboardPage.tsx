@@ -36,7 +36,7 @@ export function DashboardPage() {
       title="LuppedIn — Lupus Nephritis Care Dashboard"
       subtitle="Prioritize renal changes, overdue monitoring, and unresolved follow-up."
     >
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-5 flex items-center justify-end">
         <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)} disabled={loading}>
           <RefreshCw className="size-4" />
           Refresh
@@ -44,13 +44,13 @@ export function DashboardPage() {
       </div>
 
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {[0, 1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-20 animate-pulse rounded-xl bg-[#EAF5FC]" />
+              <div key={i} className="h-24 animate-pulse rounded-lg bg-[#E7F1F8]" />
             ))}
           </div>
-          <div className="h-48 animate-pulse rounded-xl bg-[#EAF5FC]" />
+          <div className="h-48 animate-pulse rounded-lg bg-[#E7F1F8]" />
         </div>
       )}
 
@@ -83,7 +83,7 @@ export function DashboardPage() {
             </Alert>
           )}
 
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             <SummaryStatCard label="Total patients" value={data.summary.totalPatients} accent="purple" />
             <SummaryStatCard label="Lupus nephritis" value={data.summary.lupusNephritisPatients} accent="purple" />
             <SummaryStatCard label="Needing review" value={data.summary.needsReview} accent="red" />
@@ -93,7 +93,7 @@ export function DashboardPage() {
           </div>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-foreground">Attention Queue</h2>
+            <h2 className="mb-3 text-base font-semibold text-[#1F2430]">Attention Queue</h2>
             <AttentionQueueTable patients={data.attentionQueue} />
           </section>
         </>

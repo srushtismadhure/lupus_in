@@ -5,7 +5,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 [&_svg]:size-3 [&_svg]:pointer-events-none",
+  "inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-semibold w-fit whitespace-nowrap shrink-0 gap-1 [&_svg]:size-3 [&_svg]:pointer-events-none",
   {
     variants: {
       variant: {
@@ -13,11 +13,11 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-white",
         outline: "text-foreground",
-        success: "border-transparent bg-[#EAF5EE] text-[#4F9468]",
+        success: "border-[#BFDCC9] bg-[#EAF5EE] text-[#2F7A4C]",
         warning: "border-transparent bg-[#FFF4DD] text-[#9A6418]",
         purple: "border-[#E4DAEC] bg-[#F3EFF7] text-[#3F1D63]",
-        info: "border-[#D2E9F7] bg-[#EAF5FC] text-[#356E9A]",
-        neutral: "border-transparent bg-[#F2F4F7] text-[#676B78]",
+        info: "border-[#C5E3F5] bg-[#EDF7FD] text-[#245D86]",
+        neutral: "border-[#DCE4EC] bg-[#EEF2F6] text-[#4F5E70]",
       },
     },
     defaultVariants: {

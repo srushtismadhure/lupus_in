@@ -35,8 +35,8 @@ export function AttentionQueueTable({ patients }: { patients: WorklistPatientVie
 
   if (patients.length === 0) {
     return (
-      <Card className="border-dashed bg-[#F3F9FD]">
-        <CardContent className="text-center text-sm text-muted-foreground">
+      <Card className="border-dashed bg-[#F8FBFD]">
+        <CardContent className="text-center text-sm font-medium text-[#4F5E70]">
           No patients currently require attention.
         </CardContent>
       </Card>
@@ -44,47 +44,49 @@ export function AttentionQueueTable({ patients }: { patients: WorklistPatientVie
   }
 
   return (
-    <Card className="gap-0 overflow-x-auto p-0">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-[#E4E7EC] text-xs uppercase tracking-wide text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Priority</th>
-            <th className="px-4 py-3 font-medium">Patient</th>
-            <th className="px-4 py-3 font-medium">Reason flagged</th>
-            <th className="px-4 py-3 font-medium">Latest UPCR</th>
-            <th className="px-4 py-3 font-medium">Latest eGFR</th>
-            <th className="px-4 py-3 font-medium">Monitoring</th>
-            <th className="px-4 py-3 font-medium">Open tasks</th>
-            <th className="px-4 py-3 font-medium">Last updated</th>
-            <th className="px-4 py-3 font-medium text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((view, index) => (
-            <tr key={view.patient.id} className="border-b border-[#E4E7EC] last:border-0 hover:bg-[#EAF5FC]">
-              <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{index + 1}</td>
-              <td className="px-4 py-3 font-medium text-foreground">{view.name}</td>
-              <td className="px-4 py-3">
-                <Badge variant={reasonBadgeVariant(view)}>
-                  {view.primaryAttentionReason ? ATTENTION_REASON_LABELS[view.primaryAttentionReason] : "—"}
-                </Badge>
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">{formatObservationCell(view.latestUpcr)}</td>
-              <td className="px-4 py-3 text-muted-foreground">{formatObservationCell(view.latestEgfr)}</td>
-              <td className="px-4 py-3">{monitoringBadge(view.monitoringStatus)}</td>
-              <td className="px-4 py-3 text-muted-foreground">{view.openTaskCount}</td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {view.lastUpdated ? new Date(view.lastUpdated).toLocaleDateString() : "—"}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${view.patient.id}`)}>
-                  Review Patient
-                </Button>
-              </td>
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+              <th className="px-5 py-3 font-semibold">Priority</th>
+              <th className="px-5 py-3 font-semibold">Patient</th>
+              <th className="px-5 py-3 font-semibold">Reason flagged</th>
+              <th className="px-5 py-3 font-semibold">Latest UPCR</th>
+              <th className="px-5 py-3 font-semibold">Latest eGFR</th>
+              <th className="px-5 py-3 font-semibold">Monitoring</th>
+              <th className="px-5 py-3 font-semibold">Open tasks</th>
+              <th className="px-5 py-3 font-semibold">Last updated</th>
+              <th className="px-5 py-3 font-semibold text-right">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {patients.map((view, index) => (
+              <tr key={view.patient.id} className="border-b border-[#E3EAF2] transition-colors last:border-0 hover:bg-[#F2F8FC]">
+                <td className="px-5 py-4 font-mono text-xs text-[#4F5E70]">{index + 1}</td>
+                <td className="px-5 py-4 font-semibold text-[#1F2430]">{view.name}</td>
+                <td className="px-5 py-4">
+                  <Badge variant={reasonBadgeVariant(view)}>
+                    {view.primaryAttentionReason ? ATTENTION_REASON_LABELS[view.primaryAttentionReason] : "—"}
+                  </Badge>
+                </td>
+                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestUpcr)}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestEgfr)}</td>
+                <td className="px-5 py-4">{monitoringBadge(view.monitoringStatus)}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">{view.openTaskCount}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">
+                  {view.lastUpdated ? new Date(view.lastUpdated).toLocaleDateString() : "—"}
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${view.patient.id}`)}>
+                    Review Patient
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Card>
   );
 }

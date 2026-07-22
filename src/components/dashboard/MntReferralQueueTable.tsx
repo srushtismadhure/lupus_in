@@ -28,8 +28,8 @@ export function MntReferralQueueTable({ items }: { items: MntQueueItem[] }) {
 
   if (items.length === 0) {
     return (
-      <Card className="border-dashed bg-[#F3F9FD]">
-        <CardContent className="text-center text-sm text-muted-foreground">
+      <Card className="border-dashed bg-[#F8FBFD]">
+        <CardContent className="text-center text-sm font-medium text-[#4F5E70]">
           No MNT referrals currently need attention.
         </CardContent>
       </Card>
@@ -37,39 +37,41 @@ export function MntReferralQueueTable({ items }: { items: MntQueueItem[] }) {
   }
 
   return (
-    <Card className="gap-0 overflow-x-auto p-0">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-[#E4E7EC] text-xs uppercase tracking-wide text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Patient</th>
-            <th className="px-4 py-3 font-medium">Referral reason</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-            <th className="px-4 py-3 font-medium">Owner</th>
-            <th className="px-4 py-3 font-medium">Days waiting</th>
-            <th className="px-4 py-3 font-medium">Next action</th>
-            <th className="px-4 py-3 font-medium text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item.patientId} className="border-b border-[#E4E7EC] last:border-0 hover:bg-[#EAF5FC]">
-              <td className="px-4 py-3 font-medium text-foreground">{item.patientName}</td>
-              <td className="px-4 py-3 text-muted-foreground">{item.reasonText ?? "Not available"}</td>
-              <td className="px-4 py-3">
-                <Badge variant={statusBadgeVariant(item.status)}>{MNT_STATUS_LABELS[item.status]}</Badge>
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">{item.ownerLabel}</td>
-              <td className="px-4 py-3 text-muted-foreground">{item.daysWaiting ?? "—"}</td>
-              <td className="px-4 py-3 text-muted-foreground">{item.nextAction}</td>
-              <td className="px-4 py-3 text-right">
-                <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${item.patientId}`)}>
-                  Open Patient
-                </Button>
-              </td>
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+              <th className="px-5 py-3 font-semibold">Patient</th>
+              <th className="px-5 py-3 font-semibold">Referral reason</th>
+              <th className="px-5 py-3 font-semibold">Status</th>
+              <th className="px-5 py-3 font-semibold">Owner</th>
+              <th className="px-5 py-3 font-semibold">Days waiting</th>
+              <th className="px-5 py-3 font-semibold">Next action</th>
+              <th className="px-5 py-3 font-semibold text-right">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map(item => (
+              <tr key={item.patientId} className="border-b border-[#E3EAF2] transition-colors last:border-0 hover:bg-[#F2F8FC]">
+                <td className="px-5 py-4 font-semibold text-[#1F2430]">{item.patientName}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">{item.reasonText ?? "Not available"}</td>
+                <td className="px-5 py-4">
+                  <Badge variant={statusBadgeVariant(item.status)}>{MNT_STATUS_LABELS[item.status]}</Badge>
+                </td>
+                <td className="px-5 py-4 text-[#4F5E70]">{item.ownerLabel}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">{item.daysWaiting ?? "—"}</td>
+                <td className="px-5 py-4 text-[#4F5E70]">{item.nextAction}</td>
+                <td className="px-5 py-4 text-right">
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${item.patientId}`)}>
+                    Open Patient
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Card>
   );
 }
