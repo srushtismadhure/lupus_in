@@ -39,7 +39,7 @@ export function AppSidebar() {
     { to: "/overview", label: "Overview", icon: Activity, enabled: true, end: true },
     { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
     { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
-    { to: "#", label: "Care Tasks", icon: ClipboardList, enabled: false },
+    { to: "#", label: "Care Coordination", icon: ClipboardList, enabled: false },
     { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
   ];
 
