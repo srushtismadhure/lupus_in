@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { DemoRole } from "@/lib/auth-client";
 import { useAuth } from "./AuthProvider";
+import { MADISON_GRACE_PATIENT_ID } from "@/lib/madison-class-iv-data";
 
-const ROLE_HOME: Record<DemoRole, string> = { nurse: "/nurse", clinician: "/clinician" };
+const ROLE_HOME: Record<DemoRole, string> = { nurse: "/nurse", clinician: `/patients/${MADISON_GRACE_PATIENT_ID}` };
 
 export function LoginForm() {
   const { startDemoSession, logout } = useAuth();

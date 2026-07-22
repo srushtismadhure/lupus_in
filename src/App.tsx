@@ -5,18 +5,19 @@ import { LoginPage } from "@/pages/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { NurseDashboardPage } from "@/pages/NurseDashboardPage";
 import { PatientsPage } from "@/pages/PatientsPage";
-import { OverviewPage } from "@/pages/OverviewPage";
 import { PatientDashboardPage } from "@/pages/PatientDashboardPage";
 import { MedicationManagementPage } from "@/pages/MedicationManagementPage";
 import { MedicationsOverviewPage } from "@/pages/MedicationsOverviewPage";
 import { KidneyServicesPage } from "@/pages/KidneyServicesPage";
 import { NotesCodingPage } from "@/pages/NotesCodingPage";
+import { RenalTrendsPage } from "@/pages/RenalTrendsPage";
 import "./index.css";
+import { MADISON_GRACE_PATIENT_ID } from "@/lib/madison-class-iv-data";
 
 /** Sends an authenticated user to the dashboard for their demo role. Unauthenticated users fall through to /login via ProtectedRoute. */
 function RoleHome() {
   const { user } = useAuth();
-  return <Navigate to={user?.role === "nurse" ? "/nurse" : "/clinician"} replace />;
+  return <Navigate to={user?.role === "nurse" ? "/nurse" : `/patients/${MADISON_GRACE_PATIENT_ID}`} replace />;
 }
 
 export function App() {
@@ -61,7 +62,7 @@ export function App() {
           path="/overview"
           element={
             <ProtectedRoute>
-              <OverviewPage />
+              <Navigate to={`/patients/${MADISON_GRACE_PATIENT_ID}`} replace />
             </ProtectedRoute>
           }
         />
@@ -109,7 +110,7 @@ export function App() {
           path="/patients/:patientId/renal-timeline"
           element={
             <ProtectedRoute>
-              <PatientDashboardPage />
+              <RenalTrendsPage />
             </ProtectedRoute>
           }
         />

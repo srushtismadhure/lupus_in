@@ -38,7 +38,7 @@ export function PatientHeader({ patient, conditions, onCreateTask, onAddClinical
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {patient.gender ?? "Unknown gender"} · {formatPatientAge(patient) ? `${formatPatientAge(patient)} years` : "Unknown age"} ·{" "}
-          {patient.birthDate ?? "Unknown birth date"} · <span className="font-mono">{patient.id}</span>
+          {patient.birthDate ?? "Unknown birth date"} · Synthetic demo patient
         </p>
       </div>
 

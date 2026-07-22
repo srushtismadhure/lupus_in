@@ -44,12 +44,12 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="min-h-screen w-60 shrink-0 self-stretch bg-[#2B123E] text-[#D7ECFA]">
+    <aside className="min-h-screen w-16 shrink-0 self-stretch bg-[#2B123E] text-[#D7ECFA] md:w-60">
       <div className="sticky top-0 flex h-screen flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 px-5 py-5 text-[#F7FBFF]">
+          <div className="flex items-center justify-center gap-2 px-3 py-5 text-[#F7FBFF] md:justify-start md:px-5">
             <img src={logo} alt="LoopedIn" className="size-6" />
-            <span className="text-lg font-semibold">LoopedIn</span>
+            <span className="hidden text-lg font-semibold md:inline">LoopedIn</span>
           </div>
 
           <nav className="mt-2 flex flex-col gap-0.5 px-3">
@@ -59,40 +59,42 @@ export function AppSidebar() {
                   key={item.label}
                   to={item.to}
                   end={item.end}
+                  aria-label={item.label}
+                  title={item.label}
                   className={({ isActive }) =>
                     cn(
-                      "flex min-h-9 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-[3px] focus-visible:ring-[#78B7E3]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2B123E]",
+                      "flex min-h-10 items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm font-medium outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-[3px] focus-visible:ring-[#78B7E3]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2B123E] md:min-h-9 md:justify-start md:px-3",
                       isActive ? "bg-[rgba(215,236,250,0.15)] text-[#F7FBFF]" : "bg-transparent text-[#D7ECFA]",
                     )
                   }
                 >
                   <item.icon className="size-4" />
-                  {item.label}
+                  <span className="hidden md:inline">{item.label}</span>
                 </NavLink>
               ) : (
                 <div
                   key={item.label}
-                  className="flex min-h-9 cursor-not-allowed items-center justify-between rounded-lg bg-transparent px-3 py-2 text-sm text-[#D7ECFA]/60"
+                  className="flex min-h-10 cursor-not-allowed items-center justify-center rounded-lg bg-transparent px-2 py-2 text-sm text-[#D7ECFA]/60 md:min-h-9 md:justify-between md:px-3"
                   title="Coming later"
                 >
                   <span className="flex items-center gap-3">
                     <item.icon className="size-4" />
-                    {item.label}
+                    <span className="hidden md:inline">{item.label}</span>
                   </span>
-                  <span className="text-[10px] uppercase">Soon</span>
+                  <span className="hidden text-[10px] uppercase md:inline">Soon</span>
                 </div>
               ),
             )}
           </nav>
         </div>
 
-        <div className="border-t border-white/10 px-5 py-4">
+        <div className="border-t border-white/10 px-2 py-4 md:px-5">
           {user && (
-            <p className="mb-2 text-xs text-[#D7ECFA]">
+            <p className="mb-2 hidden text-xs text-[#D7ECFA] md:block">
               {user.role === "nurse" ? "RN Care Coordinator" : "Clinician"} · {user.displayName}
             </p>
           )}
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center justify-center gap-2 text-xs md:justify-start">
             <span
               className={cn(
                 "size-2 rounded-full",
@@ -101,9 +103,9 @@ export function AppSidebar() {
                 connectionStatus === "checking" && "bg-white/30",
               )}
             />
-            <span className="text-[#D7ECFA]">SMART on FHIR</span>
+            <span className="hidden text-[#D7ECFA] md:inline">SMART on FHIR</span>
           </div>
-          <p className="mt-0.5 text-xs font-semibold text-[#F7FBFF]">
+          <p className="mt-0.5 hidden text-xs font-semibold text-[#F7FBFF] md:block">
             {connectionStatus === "connected" && "Connected"}
             {connectionStatus === "error" && "Disconnected"}
             {connectionStatus === "checking" && "Checking..."}

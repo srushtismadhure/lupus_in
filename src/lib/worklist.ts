@@ -9,6 +9,7 @@ import {
 import { formatConditionText, formatPatientName, isLupusNephritisCondition, referencesPatient } from "./formatters.js";
 import { computeAgeInYears } from "./validation.js";
 import { HIGH_PRIORITY_TASK_LEVELS, OPEN_TASK_STATUSES, PROTEINURIA_MONITORING_INTERVAL_DAYS } from "./clinical-config.js";
+import { MADISON_GRACE_PATIENT_ID, OLIVIA_BENNETT_PATIENT_ID } from "./madison-class-iv-data.js";
 import {
   ATTENTION_REASON_PRIORITY,
   type AttentionReason,
@@ -20,6 +21,18 @@ import {
 } from "./worklist-types.js";
 
 const PROTEINURIA_MONITORING_INTERVAL_MS = PROTEINURIA_MONITORING_INTERVAL_DAYS * 24 * 60 * 60 * 1000;
+
+export function sortDemoPatientViews(views: WorklistPatientView[]): WorklistPatientView[] {
+  const demoPriority = new Map([
+    [MADISON_GRACE_PATIENT_ID, 0],
+    [OLIVIA_BENNETT_PATIENT_ID, 1],
+  ]);
+  return [...views].sort((a, b) => {
+    const priorityA = demoPriority.get(a.patient.id ?? "") ?? 2;
+    const priorityB = demoPriority.get(b.patient.id ?? "") ?? 2;
+    return priorityA - priorityB || a.name.localeCompare(b.name);
+  });
+}
 
 function toWorklistValue(observation: fhir4.Observation | undefined): WorklistObservationValue | undefined {
   if (!observation) return undefined;
@@ -170,13 +183,13 @@ export async function buildClinicianWorklist(): Promise<ClinicianWorklistRespons
     fetchAllPages<fhir4.Task>("Task", "_count=100"),
   ]);
 
-  const views = patientsResult.resources.map(patient => {
+  const views = sortDemoPatientViews(patientsResult.resources.map(patient => {
     const patientId = patient.id ?? "";
     const conditions = conditionsResult.resources.filter(c => referencesPatient(c.subject, patientId));
     const observations = observationsResult.resources.filter(o => referencesPatient(o.subject, patientId));
     const tasks = tasksResult.resources.filter(t => (t.for ? referencesPatient(t.for, patientId) : false));
     return buildPatientView(patient, conditions, observations, tasks);
-  });
+  }));
 
   const attentionQueue = views
     .filter(view => view.attentionReasons.length > 0)

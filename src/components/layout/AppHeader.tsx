@@ -20,7 +20,7 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
       </div>
 
       <div className="flex items-center gap-3">
-        {user && <span className="text-sm font-medium text-[#4F5E70]">{user.displayName}</span>}
+        {user && <span className="hidden text-sm font-medium text-[#4F5E70] lg:inline">{user.displayName}</span>}
         <Button variant="outline" size="sm" onClick={handleLogout}>
           <LogOut className="size-4" />
           Log out

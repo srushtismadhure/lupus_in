@@ -16,9 +16,12 @@ import { CreateTaskDialog } from "@/components/clinical/CreateTaskDialog";
 import { NotConfiguredCard } from "@/components/clinical/NotConfiguredCard";
 import { FhirTransparencyPanel } from "@/components/clinical/FhirTransparencyPanel";
 import { AutomaticRenalCds } from "@/components/clinical/AutomaticRenalCds";
+import { RenalResponseOverview } from "@/components/clinical/RenalResponseOverview";
 import {
   getPatient,
   getPatientConditions,
+  getPatientDiagnosticReports,
+  getPatientMedicationAdministrations,
   getPatientMedicationRequests,
   getPatientObservations,
   getPatientTasks,
@@ -32,6 +35,7 @@ import {
   getObservationQuantityValue,
   LOINC_CODES,
 } from "@/lib/fhir-observations";
+import { buildRenalResponseModel } from "@/lib/renal-response";
 
 interface SectionState<T> {
   data: T;
@@ -43,6 +47,8 @@ interface DashboardData {
   conditions: SectionState<fhir4.Condition[]>;
   observations: SectionState<fhir4.Observation[]>;
   medicationRequests: SectionState<fhir4.MedicationRequest[]>;
+  diagnosticReports: SectionState<fhir4.DiagnosticReport[]>;
+  medicationAdministrations: SectionState<fhir4.MedicationAdministration[]>;
   tasks: SectionState<fhir4.Task[]>;
 }
 
@@ -66,10 +72,12 @@ export function PatientDashboardPage() {
 
     try {
       const patient = await getPatient(patientId);
-      const [conditions, observations, medicationRequests, tasks] = await Promise.allSettled([
+      const [conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks] = await Promise.allSettled([
         getPatientConditions(patientId),
         getPatientObservations(patientId),
         getPatientMedicationRequests(patientId),
+        getPatientMedicationAdministrations(patientId),
+        getPatientDiagnosticReports(patientId),
         getPatientTasks(patientId),
       ]);
 
@@ -78,6 +86,8 @@ export function PatientDashboardPage() {
         conditions: fromSettled(conditions),
         observations: fromSettled(observations),
         medicationRequests: fromSettled(medicationRequests),
+        medicationAdministrations: fromSettled(medicationAdministrations),
+        diagnosticReports: fromSettled(diagnosticReports),
         tasks: fromSettled(tasks),
       });
     } catch (err) {
@@ -109,7 +119,68 @@ export function PatientDashboardPage() {
     );
   }
 
-  const { patient, conditions, observations, medicationRequests, tasks } = data;
+  const { patient, conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks } = data;
+
+  const renalModel = buildRenalResponseModel({
+    patient,
+    conditions: conditions.data,
+    diagnosticReports: diagnosticReports.data,
+    observations: observations.data,
+    medicationRequests: medicationRequests.data,
+    medicationAdministrations: medicationAdministrations.data,
+  });
+
+  const partialData =
+    conditions.failed ||
+    observations.failed ||
+    medicationRequests.failed ||
+    medicationAdministrations.failed ||
+    diagnosticReports.failed ||
+    tasks.failed;
+
+  if (renalModel.mode === "renal-response") {
+    return (
+      <AppShell title="Patient overview" subtitle="Biopsy-confirmed lupus nephritis renal response">
+        <PatientHeader
+          patient={patient}
+          conditions={conditions.data}
+          onCreateTask={() => setCreateTaskOpen(true)}
+          onAddClinicalNote={() => patient.id && navigate(`/patients/${patient.id}/notes-coding`)}
+          onPatientUpdated={() => setReloadKey(k => k + 1)}
+        />
+
+        {patient.id && <PatientSubNav patientId={patient.id} />}
+
+        {partialData && (
+          <Alert variant="warning" className="mb-4">
+            <AlertDescription className="flex items-center justify-between gap-3">
+              <span>Some clinical data could not be loaded.</span>
+              <Button size="sm" variant="outline" onClick={() => setReloadKey(k => k + 1)}>
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <RenalResponseOverview model={renalModel} />
+
+        {patient.id && (
+          <div className="mt-5">
+            <AutomaticRenalCds patientId={patient.id} userId="PractitionerRole/demo-nephrologist" />
+          </div>
+        )}
+
+        {patient.id && (
+          <CreateTaskDialog
+            open={createTaskOpen}
+            onOpenChange={setCreateTaskOpen}
+            patientId={patient.id}
+            onCreated={() => setReloadKey(k => k + 1)}
+          />
+        )}
+      </AppShell>
+    );
+  }
 
   const upcrObservations = filterObservationsByLoinc(observations.data, LOINC_CODES.upcr);
   const egfrObservations = filterObservationsByLoinc(observations.data, LOINC_CODES.egfr);
@@ -131,7 +202,7 @@ export function PatientDashboardPage() {
   const creatininePreviousValue = creatininePrevious ? getObservationQuantityValue(creatininePrevious) : undefined;
 
   return (
-    <AppShell title="Patient dashboard" subtitle="Lupus nephritis clinical overview">
+    <AppShell title="Patient overview" subtitle="Renal surveillance clinical overview">
       <PatientHeader
         patient={patient}
         conditions={conditions.data}
@@ -142,7 +213,7 @@ export function PatientDashboardPage() {
 
       {patient.id && <PatientSubNav patientId={patient.id} />}
 
-      {(conditions.failed || observations.failed || medicationRequests.failed || tasks.failed) && (
+      {partialData && (
         <Alert variant="warning" className="mb-4">
           <AlertDescription className="flex items-center justify-between gap-3">
             <span>Some clinical data could not be loaded.</span>

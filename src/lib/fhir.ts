@@ -105,6 +105,20 @@ export async function getPatientMedicationRequests(patientId: string): Promise<f
   );
 }
 
+export async function getPatientDiagnosticReports(patientId: string): Promise<fhir4.DiagnosticReport[]> {
+  const bundle = await fhirFetch(`/DiagnosticReport?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.DiagnosticReport>(bundle, "DiagnosticReport").filter(report =>
+    referencesPatient(report.subject, patientId),
+  );
+}
+
+export async function getPatientMedicationAdministrations(patientId: string): Promise<fhir4.MedicationAdministration[]> {
+  const bundle = await fhirFetch(`/MedicationAdministration?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.MedicationAdministration>(bundle, "MedicationAdministration").filter(administration =>
+    referencesPatient(administration.subject, patientId),
+  );
+}
+
 export async function getPatientTasks(patientId: string): Promise<fhir4.Task[]> {
   const bundle = await fhirFetch(`/Task?patient=${encodeURIComponent(patientId)}`);
   return extractResourcesFromBundle<fhir4.Task>(bundle, "Task").filter(task =>

@@ -117,6 +117,17 @@ function findMatchingStatement(mr: fhir4.MedicationRequest, statements: fhir4.Me
   return [...sorted].reverse().find(statement => medicationDisplayText(statement).toLowerCase() === mrText);
 }
 
+function sortedDosageInstructions(mr: fhir4.MedicationRequest): fhir4.Dosage[] {
+  return [...(mr.dosageInstruction ?? [])].sort((a, b) =>
+    (a.timing?.repeat?.boundsPeriod?.start ?? "").localeCompare(b.timing?.repeat?.boundsPeriod?.start ?? ""),
+  );
+}
+
+function currentDosageInstruction(mr: fhir4.MedicationRequest): fhir4.Dosage | undefined {
+  const sorted = sortedDosageInstructions(mr);
+  return [...sorted].reverse().find(dosage => !dosage.timing?.repeat?.boundsPeriod?.end) ?? sorted.at(-1);
+}
+
 function buildRegimenItem(
   mr: fhir4.MedicationRequest,
   statements: fhir4.MedicationStatement[],
@@ -125,7 +136,8 @@ function buildRegimenItem(
   const text = formatMedicationText(mr);
   const category = categorizeMedicationText(text);
   const coding = mr.medicationCodeableConcept?.coding?.[0];
-  const dosage = mr.dosageInstruction?.[0];
+  const sortedDosages = sortedDosageInstructions(mr);
+  const dosage = currentDosageInstruction(mr);
   const doseQuantity = dosage?.doseAndRate?.[0]?.doseQuantity;
   const matchingStatement = findMatchingStatement(mr, statements);
 
@@ -142,8 +154,8 @@ function buildRegimenItem(
     dose: doseQuantity?.value !== undefined ? `${doseQuantity.value}${doseQuantity.unit ? ` ${doseQuantity.unit}` : ""}` : undefined,
     route: dosage?.route?.text ?? dosage?.route?.coding?.[0]?.display,
     frequency: dosage?.timing?.code?.text ?? dosage?.text,
-    startDate: mr.dosageInstruction?.[0]?.timing?.repeat?.boundsPeriod?.start ?? mr.authoredOn,
-    expectedEndDate: mr.dosageInstruction?.[0]?.timing?.repeat?.boundsPeriod?.end,
+    startDate: sortedDosages[0]?.timing?.repeat?.boundsPeriod?.start ?? mr.authoredOn,
+    expectedEndDate: dosage?.timing?.repeat?.boundsPeriod?.end,
     indication: parseTaggedNote(mr.note, NOTE_TAG.indication) ?? mr.reasonReference?.[0]?.display ?? mr.reasonCode?.[0]?.text,
     treatmentPhase: parseTaggedNote(mr.note, NOTE_TAG.treatmentPhase),
     orderingClinician: mr.requester?.display,
@@ -177,7 +189,7 @@ function detectReconciliationIssues(
 
     if (!matchingStatement) continue; // no patient-reported data at all — handled as a monitoring/insufficient-info signal, not a discrepancy
 
-    const orderedDose = mr.dosageInstruction?.[0]?.text ?? item.dose ?? "dose not specified";
+    const orderedDose = currentDosageInstruction(mr)?.text ?? item.dose ?? "dose not specified";
     const reportedDose = matchingStatement.dosage?.[0]?.text;
     const statusMismatch = matchingStatement.status === "stopped" || matchingStatement.status === "not-taken";
     const doseMismatch = reportedDose && orderedDose && reportedDose.trim().toLowerCase() !== orderedDose.trim().toLowerCase();
