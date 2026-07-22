@@ -25,6 +25,12 @@ import {
   handleUpdatePatient,
   proxyFhirRequest,
   handleGetMedicationState,
+  handleDialysisFacilities,
+  handleDialysisFacility,
+  handleDialysisFacilityFhir,
+  handleKidneyTransplantProgram,
+  handleKidneyTransplantProgramFhir,
+  handleKidneyTransplantPrograms,
   handleCreateMedicationDraft,
   handleSignMedicationRequest,
   handleHoldMedicationRequest,
@@ -238,6 +244,35 @@ export async function handleRequest(req: Request): Promise<Response> {
   if (segments.length === 2 && segments[0] === "medication-safety" && segments[1] === "evaluate") {
     if (method !== "POST") return jsonError("Method not allowed", 405);
     return handleMedicationSafetyEvaluate(req);
+  }
+
+  // --- kidney services directory ---
+  if (segments[0] === "kidney-services") {
+    if (segments.length === 2 && segments[1] === "transplant-programs") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleKidneyTransplantPrograms(req);
+    }
+    if (segments.length === 3 && segments[1] === "transplant-programs") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleKidneyTransplantProgram(req, segments[2]!);
+    }
+    if (segments.length === 4 && segments[1] === "transplant-programs" && segments[3] === "fhir") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleKidneyTransplantProgramFhir(req, segments[2]!);
+    }
+    if (segments.length === 2 && segments[1] === "dialysis-facilities") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleDialysisFacilities(req);
+    }
+    if (segments.length === 3 && segments[1] === "dialysis-facilities") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleDialysisFacility(req, segments[2]!);
+    }
+    if (segments.length === 4 && segments[1] === "dialysis-facilities" && segments[3] === "fhir") {
+      if (method !== "GET") return jsonError("Method not allowed", 405);
+      return handleDialysisFacilityFhir(req, segments[2]!);
+    }
+    return jsonError("Not found", 404);
   }
 
   // --- medication order actions ---

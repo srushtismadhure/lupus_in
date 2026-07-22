@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical } from "lucide-react";
+import { Building2, LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import logo from "@/assets/images/logo.png";
@@ -38,6 +38,7 @@ export function AppSidebar() {
     { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
     { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
     { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
+    { to: "/kidney-services", label: "Kidney Services", icon: Building2, enabled: true, end: false },
     { to: "#", label: "Care Coordination", icon: ClipboardList, enabled: false },
     { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
   ];

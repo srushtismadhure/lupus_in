@@ -87,6 +87,19 @@ import type {
   SaveClinicalNoteInput,
   SdohReferralDraftInput,
 } from "../lib/notes-coding-types.js";
+import {
+  getDialysisFacilities,
+  getDialysisFacility,
+  getKidneyTransplantProgram,
+  getKidneyTransplantPrograms,
+} from "../lib/kidney-services/repository.js";
+import {
+  parseDialysisSearchParams,
+  parseKidneyServiceSearchParams,
+  searchDialysisFacilities,
+  searchTransplantPrograms,
+} from "../lib/kidney-services/search.js";
+import { createFhirDirectoryBundle } from "../lib/kidney-services/to-fhir-directory-bundle.js";
 
 const HOP_BY_HOP_RESPONSE_HEADERS = new Set(["content-type", "location", "content-location", "etag", "last-modified"]);
 const FORWARDED_REQUEST_HEADERS = ["if-match", "if-none-match", "if-modified-since", "prefer"];
@@ -655,6 +668,98 @@ export async function handleMedicationSafetyEvaluate(req: Request): Promise<Resp
   const evaluation = await evaluateMedicationSafety(patientId, [draft]);
   const persisted = await persistDetectedIssuesFromEvaluation(patientId, evaluation);
   return Response.json({ ...cdsHooksResponse(evaluation), conflicts: persisted }, { status: 200 });
+}
+
+// ---------------------------------------------------------------------------
+// Kidney services directory
+// ---------------------------------------------------------------------------
+
+function fhirJsonResponse(resource: fhir4.Resource): Response {
+  return new Response(JSON.stringify(resource, null, 2), {
+    status: 200,
+    headers: { "Content-Type": "application/fhir+json" },
+  });
+}
+
+function directoryReadError(error: unknown): Response {
+  console.error("Kidney services directory read failed:", error instanceof Error ? error.message : "unknown error");
+  return Response.json({ error: "Kidney services data has not been generated. Run bun run import:kidney-services." }, { status: 500 });
+}
+
+export async function handleKidneyTransplantPrograms(req: Request): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  const parsed = parseKidneyServiceSearchParams(new URL(req.url).searchParams);
+  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+
+  try {
+    const programs = await getKidneyTransplantPrograms();
+    return Response.json(searchTransplantPrograms(programs, parsed.options), { status: 200 });
+  } catch (error) {
+    return directoryReadError(error);
+  }
+}
+
+export async function handleKidneyTransplantProgram(req: Request, centerCode: string): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  try {
+    const program = await getKidneyTransplantProgram(decodeURIComponent(centerCode));
+    if (!program) return Response.json({ error: "Kidney transplant program not found." }, { status: 404 });
+    return Response.json(program, { status: 200 });
+  } catch (error) {
+    return directoryReadError(error);
+  }
+}
+
+export async function handleKidneyTransplantProgramFhir(req: Request, centerCode: string): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  try {
+    const program = await getKidneyTransplantProgram(decodeURIComponent(centerCode));
+    if (!program) return Response.json({ error: "Kidney transplant program not found." }, { status: 404 });
+    return fhirJsonResponse(createFhirDirectoryBundle(program));
+  } catch (error) {
+    return directoryReadError(error);
+  }
+}
+
+export async function handleDialysisFacilities(req: Request): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  const parsed = parseDialysisSearchParams(new URL(req.url).searchParams);
+  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+
+  try {
+    const facilities = await getDialysisFacilities();
+    return Response.json(searchDialysisFacilities(facilities, parsed.options), { status: 200 });
+  } catch (error) {
+    return directoryReadError(error);
+  }
+}
+
+export async function handleDialysisFacility(req: Request, facilityId: string): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  try {
+    const facility = await getDialysisFacility(decodeURIComponent(facilityId));
+    if (!facility) return Response.json({ error: "Dialysis facility not found." }, { status: 404 });
+    return Response.json(facility, { status: 200 });
+  } catch (error) {
+    return directoryReadError(error);
+  }
+}
+
+export async function handleDialysisFacilityFhir(req: Request, facilityId: string): Promise<Response> {
+  if (!getSessionFromRequest(req)) return unauthorizedResponse();
+
+  try {
+    const facility = await getDialysisFacility(decodeURIComponent(facilityId));
+    if (!facility) return Response.json({ error: "Dialysis facility not found." }, { status: 404 });
+    return fhirJsonResponse(createFhirDirectoryBundle(facility));
+  } catch (error) {
+    return directoryReadError(error);
+  }
 }
 
 // ---------------------------------------------------------------------------

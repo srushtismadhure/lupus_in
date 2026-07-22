@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "import:kidney-services": "bun scripts/import-kidney-services.ts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.8",
@@ -19,6 +20,7 @@
     "bun-plugin-tailwind": "^0.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "csv-parse": "^7.0.1",
     "lucide-react": "^1",
     "react": "^19",
     "react-dom": "^19",

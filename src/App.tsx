@@ -9,6 +9,7 @@ import { OverviewPage } from "@/pages/OverviewPage";
 import { PatientDashboardPage } from "@/pages/PatientDashboardPage";
 import { MedicationManagementPage } from "@/pages/MedicationManagementPage";
 import { MedicationsOverviewPage } from "@/pages/MedicationsOverviewPage";
+import { KidneyServicesPage } from "@/pages/KidneyServicesPage";
 import { NotesCodingPage } from "@/pages/NotesCodingPage";
 import "./index.css";
 
@@ -69,6 +70,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <MedicationsOverviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kidney-services"
+          element={
+            <ProtectedRoute>
+              <KidneyServicesPage />
             </ProtectedRoute>
           }
         />
