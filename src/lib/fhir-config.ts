@@ -1,4 +1,11 @@
-function readFhirConfig() {
+export interface FhirConfig {
+  baseUrl: string;
+  bearerToken: string;
+}
+
+let cachedConfig: FhirConfig | null = null;
+
+function readFhirConfig(): FhirConfig {
   const rawBaseUrl = process.env.FHIR_BASE_URL;
   const bearerToken = process.env.FHIR_BEARER_TOKEN;
 
@@ -14,4 +21,7 @@ function readFhirConfig() {
   return { baseUrl, bearerToken };
 }
 
-export const fhirConfig = readFhirConfig();
+export function getFhirConfig(): FhirConfig {
+  cachedConfig ??= readFhirConfig();
+  return cachedConfig;
+}

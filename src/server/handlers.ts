@@ -7,7 +7,7 @@
  * no framework-specific request/response types — so both entry points can
  * call the exact same code with zero duplication.
  */
-import { fhirConfig } from "../lib/fhir-config";
+import { getFhirConfig } from "../lib/fhir-config.js";
 import {
   buildClearedSessionCookie,
   buildSessionCookie,
@@ -18,17 +18,17 @@ import {
   isDemoRole,
   requireRole,
   unauthorizedResponse,
-} from "../lib/auth";
-import { buildPatientResource, mergePatientResource, validatePatientInput, type PatientFormInput } from "../lib/patient-input";
+} from "../lib/auth.js";
+import { buildPatientResource, mergePatientResource, validatePatientInput, type PatientFormInput } from "../lib/patient-input.js";
 import {
   createFhirResource,
   extractIdFromLocation,
   readFhirResource,
   searchFhirResource,
   updateFhirResource,
-} from "../lib/fhir-server-client";
-import { buildClinicianWorklist } from "../lib/worklist";
-import { referencesPatient } from "../lib/formatters";
+} from "../lib/fhir-server-client.js";
+import { buildClinicianWorklist } from "../lib/worklist.js";
+import { referencesPatient } from "../lib/formatters.js";
 import {
   buildNurseMntWorklist,
   contactPatient,
@@ -41,11 +41,12 @@ import {
   sendForSignature,
   signReferral,
   type MntActionResult,
-} from "../lib/mnt";
-import type { PatientWillingness } from "../lib/mnt-types";
+} from "../lib/mnt.js";
+import type { PatientWillingness } from "../lib/mnt-types.js";
 
 const HOP_BY_HOP_RESPONSE_HEADERS = new Set(["content-type", "location", "content-location", "etag", "last-modified"]);
 const FORWARDED_REQUEST_HEADERS = ["if-match", "if-none-match", "if-modified-since", "prefer"];
+const VERCEL_ROUTE_PARAM_KEYS = ["resource", "id", "patientId", "referralId", "action", "...path"];
 
 export function networkErrorResponse() {
   return Response.json(
@@ -59,15 +60,20 @@ export function networkErrorResponse() {
 
 /**
  * Proxies a request to Medblocks. `fhirSubPath` is the path *after* the public `/fhir` prefix
- * (e.g. `/Patient`), passed in explicitly so callers don't need to agree on a URL prefix —
- * the Bun router strips `/fhir` itself, Vercel's `api/fhir/[...path].ts` passes the captured segments.
+ * (e.g. `/Patient`), passed in explicitly so callers don't need to agree on a URL prefix.
  */
 export async function proxyFhirRequest(req: Request, fhirSubPath: string): Promise<Response> {
   if (!getSessionFromRequest(req)) return unauthorizedResponse();
 
+  const fhirConfig = getFhirConfig();
   const incomingUrl = new URL(req.url);
   const upstreamUrl = new URL(`${fhirConfig.baseUrl}${fhirSubPath || "/"}`);
-  upstreamUrl.search = incomingUrl.search;
+
+  const upstreamSearchParams = new URLSearchParams(incomingUrl.search);
+  for (const key of VERCEL_ROUTE_PARAM_KEYS) {
+    upstreamSearchParams.delete(key);
+  }
+  upstreamUrl.search = upstreamSearchParams.toString();
 
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${fhirConfig.bearerToken}`);

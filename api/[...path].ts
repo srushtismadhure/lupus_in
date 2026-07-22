@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { vercelHandler } from "./_lib/adapter";
-import { handleRequest } from "../src/server/router";
+import { vercelHandler } from "./_lib/adapter.js";
+import { handleRequest } from "../src/server/router.js";
 
 // The ONE Vercel serverless function for the entire backend — every /api/*
 // route (rewritten from /fhir/* too, see vercel.json) lands here and is

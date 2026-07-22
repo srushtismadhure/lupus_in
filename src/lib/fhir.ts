@@ -1,4 +1,4 @@
-import { referencesPatient } from "./formatters";
+import { referencesPatient } from "./formatters.js";
 
 const FHIR_PREFIX = "/fhir";
 

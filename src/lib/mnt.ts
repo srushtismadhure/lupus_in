@@ -4,7 +4,7 @@ import {
   readFhirResource,
   searchFhirResource,
   updateFhirResource,
-} from "./fhir-server-client";
+} from "./fhir-server-client.js";
 import {
   ADHERENCE_BARRIER_KEYWORDS,
   BP_CONCERN_SYSTOLIC_THRESHOLD,
@@ -16,9 +16,9 @@ import {
   MNT_SUGGESTION_RULE_LABELS,
   PATIENT_CONFUSION_KEYWORDS,
   POOR_INTAKE_KEYWORDS,
-} from "./clinical-config";
-import { LOINC_CODES, filterObservationsByLoinc, getLatestObservation, getObservationInterpretation } from "./fhir-observations";
-import { formatConditionText, formatPatientName, isRenalDiagnosisCondition, referencesPatient } from "./formatters";
+} from "./clinical-config.js";
+import { LOINC_CODES, filterObservationsByLoinc, getLatestObservation, getObservationInterpretation } from "./fhir-observations.js";
+import { formatConditionText, formatPatientName, isRenalDiagnosisCondition, referencesPatient } from "./formatters.js";
 import type {
   MntPatientState,
   MntPopulationSummary,
@@ -29,7 +29,7 @@ import type {
   MntWorklistResponse,
   NextResponsible,
   PatientWillingness,
-} from "./mnt-types";
+} from "./mnt-types.js";
 
 const NOTE_TAG = {
   preparedBy: "[prepared-by]",

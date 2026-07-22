@@ -1,4 +1,4 @@
-import { fhirConfig } from "./fhir-config";
+import { getFhirConfig } from "./fhir-config.js";
 
 /** Server-only helper for writing to Medblocks directly (not through the passthrough proxy). */
 
@@ -13,6 +13,7 @@ async function fhirServerRequest<T>(
   path: string,
   init: { method: string; body?: unknown; ifMatch?: string },
 ): Promise<FhirServerResponse<T>> {
+  const fhirConfig = getFhirConfig();
   const headers = new Headers({
     Authorization: `Bearer ${fhirConfig.bearerToken}`,
     Accept: "application/fhir+json",
@@ -73,6 +74,7 @@ const MAX_PAGES = 25;
  * and drop the Authorization header. Force the link to use the same scheme as the configured base URL.
  */
 function normalizeSchemeToBaseUrl(link: string): string {
+  const fhirConfig = getFhirConfig();
   const baseProtocol = new URL(fhirConfig.baseUrl).protocol;
   const linkUrl = new URL(link);
   linkUrl.protocol = baseProtocol;
@@ -84,6 +86,7 @@ export async function fetchAllPages<T extends { resourceType: string }>(
   resourceType: string,
   query: string,
 ): Promise<PagedFetchResult<T>> {
+  const fhirConfig = getFhirConfig();
   const resources: T[] = [];
   let url: string | null = `${fhirConfig.baseUrl}/${resourceType}?${query}`;
   let complete = true;

@@ -33,7 +33,7 @@ export function DashboardPage() {
 
   return (
     <AppShell
-      title="NEPHRA — Lupus Nephritis Care Dashboard"
+      title="LuppedIn — Lupus Nephritis Care Dashboard"
       subtitle="Prioritize renal changes, overdue monitoring, and unresolved follow-up."
     >
       <div className="mb-4 flex items-center justify-end">

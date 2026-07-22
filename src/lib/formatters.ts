@@ -1,5 +1,5 @@
-import { computeAgeInYears } from "./validation";
-import { CKD_ICD10_PREFIX, LUPUS_NEPHRITIS_ICD10_CODE } from "./clinical-config";
+import { computeAgeInYears } from "./validation.js";
+import { CKD_ICD10_PREFIX, LUPUS_NEPHRITIS_ICD10_CODE } from "./clinical-config.js";
 
 export function formatPatientName(patient: fhir4.Patient): string {
   const names = patient.name ?? [];

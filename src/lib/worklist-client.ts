@@ -1,4 +1,4 @@
-import type { ClinicianWorklistResponse } from "./worklist-types";
+import type { ClinicianWorklistResponse } from "./worklist-types.js";
 
 export async function getClinicianWorklist(): Promise<ClinicianWorklistResponse> {
   const response = await fetch("/api/clinician-worklist", { credentials: "include" });

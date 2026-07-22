@@ -1,14 +1,14 @@
-import { fetchAllPages } from "./fhir-server-client";
+import { fetchAllPages } from "./fhir-server-client.js";
 import {
   LOINC_CODES,
   filterObservationsByLoinc,
   getLatestObservation,
   getObservationQuantityValue,
   sortObservationsByDate,
-} from "./fhir-observations";
-import { formatConditionText, formatPatientName, isLupusNephritisCondition, referencesPatient } from "./formatters";
-import { computeAgeInYears } from "./validation";
-import { HIGH_PRIORITY_TASK_LEVELS, OPEN_TASK_STATUSES, PROTEINURIA_MONITORING_INTERVAL_DAYS } from "./clinical-config";
+} from "./fhir-observations.js";
+import { formatConditionText, formatPatientName, isLupusNephritisCondition, referencesPatient } from "./formatters.js";
+import { computeAgeInYears } from "./validation.js";
+import { HIGH_PRIORITY_TASK_LEVELS, OPEN_TASK_STATUSES, PROTEINURIA_MONITORING_INTERVAL_DAYS } from "./clinical-config.js";
 import {
   ATTENTION_REASON_PRIORITY,
   type AttentionReason,
@@ -17,7 +17,7 @@ import {
   type WorklistObservationValue,
   type WorklistPatientView,
   type WorklistSummary,
-} from "./worklist-types";
+} from "./worklist-types.js";
 
 const PROTEINURIA_MONITORING_INTERVAL_MS = PROTEINURIA_MONITORING_INTERVAL_DAYS * 24 * 60 * 60 * 1000;
 

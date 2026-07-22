@@ -1,4 +1,4 @@
-import { isValidAdministrativeGender, isValidCalendarDateString, isFutureDateString, validateNamePart } from "./validation";
+import { isValidAdministrativeGender, isValidCalendarDateString, isFutureDateString, validateNamePart } from "./validation.js";
 
 /** Shape submitted by the create/edit patient forms. Validated on the server — never trust the browser. */
 export interface PatientFormInput {

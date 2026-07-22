@@ -23,21 +23,30 @@ export function isDemoRole(value: unknown): value is DemoRole {
 }
 
 export const DEMO_USERS: Record<DemoRole, { email: string; displayName: string }> = {
-  nurse: { email: "rn@nephra.app", displayName: "NEPHRA RN Care Coordinator" },
-  clinician: { email: "demo@nephra.app", displayName: "NEPHRA Demo Clinician" },
+  nurse: { email: "rn@nephra.app", displayName: "LuppedIn RN Care Coordinator" },
+  clinician: { email: "demo@nephra.app", displayName: "LuppedIn Demo Clinician" },
 };
 
 const SESSION_COOKIE_NAME = "nephra_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const DEMO_ENVIRONMENT = "synthetic-demo";
 
-function readAuthConfig() {
+interface AuthConfig {
+  sessionSecret: string;
+}
+
+let cachedAuthConfig: AuthConfig | null = null;
+
+function readAuthConfig(): AuthConfig {
   const sessionSecret = process.env.APP_SESSION_SECRET;
   if (!sessionSecret) throw new Error("Missing required environment variable: APP_SESSION_SECRET");
   return { sessionSecret };
 }
 
-export const authConfig = readAuthConfig();
+function getAuthConfig(): AuthConfig {
+  cachedAuthConfig ??= readAuthConfig();
+  return cachedAuthConfig;
+}
 
 function base64UrlEncode(input: string): string {
   return Buffer.from(input, "utf8").toString("base64url");
@@ -48,7 +57,7 @@ function base64UrlDecode(input: string): string {
 }
 
 function sign(payload: string): string {
-  return createHmac("sha256", authConfig.sessionSecret).update(payload).digest("base64url");
+  return createHmac("sha256", getAuthConfig().sessionSecret).update(payload).digest("base64url");
 }
 
 function constantTimeEqual(a: string, b: string): boolean {

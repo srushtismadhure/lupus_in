@@ -24,7 +24,7 @@ import {
   handleSignMntReferral,
   handleUpdatePatient,
   proxyFhirRequest,
-} from "./handlers";
+} from "./handlers.js";
 
 function jsonError(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
@@ -48,6 +48,9 @@ export async function handleRequest(req: Request): Promise<Response> {
   // --- FHIR proxy: preserve the full path + query string, whatever prefix it arrived under ---
   if (pathname === "/fhir" || pathname.startsWith("/fhir/")) {
     return proxyFhirRequest(req, pathname.replace(/^\/fhir/, "") || "/");
+  }
+  if (pathname === "/api/fhir" || pathname.startsWith("/api/fhir/")) {
+    return proxyFhirRequest(req, pathname.replace(/^\/api\/fhir/, "") || "/");
   }
 
   if (pathname !== "/api" && !pathname.startsWith("/api/")) {

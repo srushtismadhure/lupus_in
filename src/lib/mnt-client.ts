@@ -1,4 +1,4 @@
-import type { MntPatientState, MntReferralView, MntWorklistResponse, PatientWillingness } from "./mnt-types";
+import type { MntPatientState, MntReferralView, MntWorklistResponse, PatientWillingness } from "./mnt-types.js";
 
 async function mntFetch<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const response = await fetch(path, {

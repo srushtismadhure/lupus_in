@@ -1,4 +1,4 @@
-import type { PatientFormInput } from "./patient-input";
+import type { PatientFormInput } from "./patient-input.js";
 
 export interface PatientApiResult {
   ok: boolean;
