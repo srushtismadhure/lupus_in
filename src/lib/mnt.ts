@@ -313,21 +313,39 @@ export async function createDraftReferral(input: CreateDraftReferralInput): Prom
     return { ok: false, status: created.status, error: "Unable to create the referral on the FHIR server." };
   }
 
+  return { ok: true, referral: buildReferralView(created.body, undefined, undefined) };
+}
+
+export interface SendForSignatureInput {
+  serviceRequestId: string;
+  nurseDisplay: string;
+}
+
+/** The nurse's "Send for Signature" action — creates the clinician-review Task for an already-drafted referral. */
+export async function sendForSignature(input: SendForSignatureInput): Promise<MntActionResult> {
+  const loaded = await loadReferralById(input.serviceRequestId);
+  if (!loaded) return { ok: false, status: 404, error: "Referral not found." };
+  if (loaded.serviceRequest.status !== "draft") {
+    return { ok: false, status: 409, error: "Only a draft referral can be sent for signature." };
+  }
+  if (loaded.reviewTask) {
+    return { ok: false, status: 409, error: "This referral has already been sent for signature." };
+  }
+
   const reviewTask: fhir4.Task = {
     resourceType: "Task",
     status: "requested",
     intent: "order",
     description: REVIEW_TASK_DESCRIPTION,
     priority: "routine",
-    focus: { reference: `ServiceRequest/${created.body.id}` },
-    for: { reference: `Patient/${input.patientId}` },
+    focus: { reference: `ServiceRequest/${input.serviceRequestId}` },
+    for: loaded.serviceRequest.subject,
     owner: { display: "Clinician review pool" },
     authoredOn: new Date().toISOString(),
   };
-  await createFhirResource<fhir4.Task>("Task", reviewTask);
+  const createdTask = await createFhirResource<fhir4.Task>("Task", reviewTask);
 
-  const reviewTaskForView: fhir4.Task = reviewTask;
-  return { ok: true, referral: buildReferralView(created.body, reviewTaskForView, undefined) };
+  return { ok: true, referral: buildReferralView(loaded.serviceRequest, createdTask.body, loaded.coordinationTask) };
 }
 
 async function loadReferralById(serviceRequestId: string): Promise<{

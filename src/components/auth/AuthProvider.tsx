@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { getSession, logout as logoutRequest, startDemoSession, type DemoUser } from "@/lib/auth-client";
+import { getSession, logout as logoutRequest, startDemoSession, type DemoRole, type DemoUser } from "@/lib/auth-client";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 interface AuthContextValue {
   status: AuthStatus;
   user?: DemoUser;
-  startDemoSession: () => Promise<{ ok: boolean }>;
+  startDemoSession: (role: DemoRole) => Promise<{ ok: boolean; role?: DemoRole }>;
   logout: () => Promise<void>;
 }
 
@@ -26,13 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const enterDemo = useCallback(async () => {
-    const result = await startDemoSession();
+  const enterDemo = useCallback(async (role: DemoRole) => {
+    const result = await startDemoSession(role);
     if (result.ok) {
       setStatus("authenticated");
       setUser(result.user);
     }
-    return { ok: result.ok };
+    return { ok: result.ok, role: result.user?.role };
   }, []);
 
   const logout = useCallback(async () => {

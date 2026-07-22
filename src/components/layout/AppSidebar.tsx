@@ -2,17 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Users, Activity, LineChart, Pill, ClipboardList, FlaskConical, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
-  { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
-  { to: "/overview", label: "Overview", icon: Activity, enabled: true, end: true },
-  { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
-  { to: "#", label: "Medications", icon: Pill, enabled: false },
-  { to: "#", label: "Care Tasks", icon: ClipboardList, enabled: false },
-  { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
-  { to: "#", label: "FHIR Data", icon: Database, enabled: false },
-];
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type ConnectionStatus = "checking" | "connected" | "error";
 
@@ -38,6 +28,20 @@ function useFhirConnectionStatus(): ConnectionStatus {
 
 export function AppSidebar() {
   const connectionStatus = useFhirConnectionStatus();
+  const { user } = useAuth();
+
+  const dashboardHome = user?.role === "nurse" ? "/nurse" : "/clinician";
+
+  const navItems = [
+    { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
+    { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
+    { to: "/overview", label: "Overview", icon: Activity, enabled: true, end: true },
+    { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
+    { to: "#", label: "Medications", icon: Pill, enabled: false },
+    { to: "#", label: "Care Tasks", icon: ClipboardList, enabled: false },
+    { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
+    { to: "#", label: "FHIR Data", icon: Database, enabled: false },
+  ];
 
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col justify-between bg-[#2D123F] text-[#D9CFE2]">
@@ -47,7 +51,7 @@ export function AppSidebar() {
         </div>
 
         <nav className="mt-2 flex flex-col gap-0.5 px-3">
-          {NAV_ITEMS.map(item =>
+          {navItems.map(item =>
             item.enabled ? (
               <NavLink
                 key={item.label}
@@ -81,6 +85,11 @@ export function AppSidebar() {
       </div>
 
       <div className="border-t border-white/10 px-5 py-4">
+        {user && (
+          <p className="mb-2 text-xs text-[#D9CFE2]">
+            {user.role === "nurse" ? "RN Care Coordinator" : "Clinician"} · {user.displayName}
+          </p>
+        )}
         <div className="flex items-center gap-2 text-xs">
           <span
             className={cn(

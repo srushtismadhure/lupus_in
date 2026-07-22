@@ -1,7 +1,9 @@
+export type DemoRole = "nurse" | "clinician";
+
 export interface DemoUser {
   email: string;
   displayName: string;
-  role: string;
+  role: DemoRole;
 }
 
 export interface SessionState {
@@ -19,8 +21,13 @@ export interface DemoLoginResult {
   user?: DemoUser;
 }
 
-export async function startDemoSession(): Promise<DemoLoginResult> {
-  const response = await fetch("/api/demo-login", { method: "POST", credentials: "include" });
+export async function startDemoSession(role: DemoRole): Promise<DemoLoginResult> {
+  const response = await fetch("/api/demo-login", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
   if (!response.ok) return { ok: false };
   const body = (await response.json()) as SessionState;
   return { ok: true, user: body.user };
