@@ -34,12 +34,12 @@ export function PathwayStatusBadge({ status }: { status: CarePathwayStatus }) {
     <span
       className={cn(
         "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
-        (status === "completed" || status === "closed") && "border-[#B9DDC6] bg-[#EAF5EE] text-[#245E3C]",
+        (status === "completed" || status === "closed") && "border-[var(--mint)] bg-[var(--success-bg)] text-[color:var(--success)]",
         status === "blocked" && "border-[#E9B7BF] bg-[#FCEBED] text-[#8B2D3B]",
-        (status === "deferred" || status === "declined") && "border-[#D7DEE7] bg-[#EEF2F6] text-[#445160]",
-        (status === "awaiting-clinician-review" || status === "suggested") && "border-[#E6C784] bg-[#FFF4DD] text-[#805110]",
+        (status === "deferred" || status === "declined") && "border-[var(--border)] bg-[var(--muted)] text-[color:var(--foreground)]",
+        (status === "awaiting-clinician-review" || status === "suggested") && "border-[var(--yellow)] bg-[var(--warning-bg)] text-[color:var(--warning-text)]",
         !["completed", "closed", "blocked", "deferred", "declined", "awaiting-clinician-review", "suggested"].includes(status) &&
-          "border-[#B7D9EF] bg-[#EDF7FD] text-[#245D86]",
+          "border-[var(--info-border)] bg-[var(--info-bg)] text-[color:var(--link)]",
       )}
       aria-label={`Pathway status: ${LABELS[status]}`}
     >

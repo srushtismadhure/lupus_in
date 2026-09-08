@@ -40,7 +40,7 @@ export function SessionTimeoutDialog() {
   return (
     <Dialog open onOpenChange={() => undefined}>
       <DialogContent showCloseButton={false} role="alertdialog" aria-describedby="session-timeout-description">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><Clock3 className="size-5 text-[#9A6418]" aria-hidden="true" />Your session will end soon</DialogTitle><DialogDescription id="session-timeout-description">For your privacy, you will be logged out in about {minutes} minute{minutes === 1 ? "" : "s"}. Finish or save any open form before the session ends.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><Clock3 className="size-5 text-[color:var(--warning-text)]" aria-hidden="true" />Your session will end soon</DialogTitle><DialogDescription id="session-timeout-description">For your privacy, you will be logged out in about {minutes} minute{minutes === 1 ? "" : "s"}. Finish or save any open form before the session ends.</DialogDescription></DialogHeader>
         <DialogFooter><Button variant="outline" onClick={async () => { await logout(); window.location.replace("/login?loggedOut=1"); }}>Log out now</Button><Button onClick={extend} disabled={extending}>{extending ? "Extending..." : "Keep me signed in"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

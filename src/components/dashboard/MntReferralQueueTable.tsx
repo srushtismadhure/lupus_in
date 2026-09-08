@@ -28,8 +28,8 @@ export function MntReferralQueueTable({ items }: { items: MntQueueItem[] }) {
 
   if (items.length === 0) {
     return (
-      <Card className="border-dashed bg-[#F8FBFD]">
-        <CardContent className="text-center text-sm font-medium text-[#4F5E70]">
+      <Card className="border-dashed bg-[var(--background)]">
+        <CardContent className="text-center text-sm font-medium text-[color:var(--muted-foreground)]">
           No MNT referrals currently need attention.
         </CardContent>
       </Card>
@@ -41,7 +41,7 @@ export function MntReferralQueueTable({ items }: { items: MntQueueItem[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+            <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
               <th className="px-5 py-3 font-semibold">Patient</th>
               <th className="px-5 py-3 font-semibold">Referral reason</th>
               <th className="px-5 py-3 font-semibold">Status</th>
@@ -53,15 +53,15 @@ export function MntReferralQueueTable({ items }: { items: MntQueueItem[] }) {
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.patientId} className="border-b border-[#E3EAF2] transition-colors last:border-0 hover:bg-[#F2F8FC]">
-                <td className="px-5 py-4 font-semibold text-[#1F2430]">{item.patientName}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{item.reasonText ?? "Not available"}</td>
+              <tr key={item.patientId} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--blue-panel)]">
+                <td className="px-5 py-4 font-semibold text-[color:var(--foreground)]">{item.patientName}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{item.reasonText ?? "Not available"}</td>
                 <td className="px-5 py-4">
                   <Badge variant={statusBadgeVariant(item.status)}>{MNT_STATUS_LABELS[item.status]}</Badge>
                 </td>
-                <td className="px-5 py-4 text-[#4F5E70]">{item.ownerLabel}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{item.daysWaiting ?? "—"}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{item.nextAction}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{item.ownerLabel}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{item.daysWaiting ?? "—"}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{item.nextAction}</td>
                 <td className="px-5 py-4 text-right">
                   <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${item.patientId}`)}>
                     Open Patient

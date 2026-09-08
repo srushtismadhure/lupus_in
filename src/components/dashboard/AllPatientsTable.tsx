@@ -31,7 +31,7 @@ export function AllPatientsTable({ patients, onEdit, onDeactivate }: AllPatients
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+            <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
               <th className="px-5 py-3 font-semibold">Name</th>
               <th className="px-5 py-3 font-semibold">Age</th>
               <th className="px-5 py-3 font-semibold">Primary condition</th>
@@ -50,7 +50,7 @@ export function AllPatientsTable({ patients, onEdit, onDeactivate }: AllPatients
                 tabIndex={0}
                 role="button"
                 aria-label={`Open patient ${view.name}`}
-                className="cursor-pointer border-b border-[#E3EAF2] outline-none transition-colors last:border-0 hover:bg-[#F2F8FC] focus-visible:bg-[#F2F8FC] focus-visible:ring-2 focus-visible:ring-[#4F97C8] focus-visible:ring-inset"
+                className="cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--blue-panel)] focus-visible:bg-[var(--blue-panel)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset"
                 onClick={() => navigate(`/patients/${view.patient.id}`)}
                 onKeyDown={e => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -59,13 +59,13 @@ export function AllPatientsTable({ patients, onEdit, onDeactivate }: AllPatients
                   }
                 }}
               >
-                <td className="px-5 py-4 font-semibold text-[#1F2430]">{view.name}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{view.age ?? "—"}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{view.primaryConditionText ?? "Not available"}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestUpcr)}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestEgfr)}</td>
+                <td className="px-5 py-4 font-semibold text-[color:var(--foreground)]">{view.name}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.age ?? "—"}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.primaryConditionText ?? "Not available"}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestUpcr)}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestEgfr)}</td>
                 <td className="px-5 py-4">{monitoringBadge(view.monitoringStatus)}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{view.openTaskCount}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.openTaskCount}</td>
                 <td className="px-5 py-4">
                   {view.active ? <Badge variant="success">Active</Badge> : <Badge variant="neutral">Inactive</Badge>}
                 </td>

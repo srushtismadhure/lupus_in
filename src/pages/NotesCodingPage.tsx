@@ -97,18 +97,18 @@ function candidateLabel(candidate: TerminologyCandidate): string {
 }
 
 function EvidenceList({ items }: { items: PriorAuthReadiness["evidenceFound"] }) {
-  if (items.length === 0) return <p className="text-sm text-[#4F5E70]">No evidence items found.</p>;
+  if (items.length === 0) return <p className="text-sm text-[color:var(--muted-foreground)]">No evidence items found.</p>;
   return (
     <div className="space-y-2">
       {items.map(item => (
-        <div key={item.id} className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
+        <div key={item.id} className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
           <div className="flex flex-wrap items-center gap-2">
-            {item.status === "found" ? <CheckCircle2 className="size-4 text-[#2F7A4C]" /> : <AlertTriangle className="size-4 text-[#9A6418]" />}
-            <span className="text-sm font-semibold text-[#1F2430]">{item.label}</span>
+            {item.status === "found" ? <CheckCircle2 className="size-4 text-[color:var(--success)]" /> : <AlertTriangle className="size-4 text-[color:var(--warning-text)]" />}
+            <span className="text-sm font-semibold text-[color:var(--foreground)]">{item.label}</span>
             <Badge variant={item.status === "found" ? "success" : item.status === "missing" ? "warning" : "neutral"}>{item.status}</Badge>
           </div>
-          <p className="mt-1 text-sm text-[#4F5E70]">{item.details}</p>
-          {item.reference && <p className="mt-1 font-mono text-xs text-[#3F1D63]">{item.reference}</p>}
+          <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{item.details}</p>
+          {item.reference && <p className="mt-1 font-mono text-xs text-[color:var(--brand)]">{item.reference}</p>}
         </div>
       ))}
     </div>
@@ -163,22 +163,22 @@ function ConceptCard({
   const approvalBlocked = !draftId || busy || validated.length === 0 || concept.status !== "present" || concept.subject !== "patient";
 
   return (
-    <Card className="border-[#DCE6F0]">
+    <Card className="border-[var(--border)]">
       <CardContent className="p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-[#1F2430]">{concept.normalizedConcept}</p>
-            <p className="mt-1 text-xs font-medium uppercase tracking-[0.04em] text-[#6E7888]">{CATEGORY_LABELS[concept.category]}</p>
+            <p className="text-sm font-semibold text-[color:var(--foreground)]">{concept.normalizedConcept}</p>
+            <p className="mt-1 text-xs font-medium uppercase tracking-[0.04em] text-[color:var(--muted-foreground)]">{CATEGORY_LABELS[concept.category]}</p>
           </div>
           {statusBadge(concept)}
         </div>
 
-        <div className="mt-3 rounded-md border border-[#E7EDF4] bg-white p-3">
-          <p className="text-xs font-semibold text-[#4F5E70]">Evidence</p>
-          <p className="mt-1 text-sm text-[#1F2430]">"{concept.sourceText}"</p>
+        <div className="mt-3 rounded-md border border-[var(--border)] bg-white p-3">
+          <p className="text-xs font-semibold text-[color:var(--muted-foreground)]">Evidence</p>
+          <p className="mt-1 text-sm text-[color:var(--foreground)]">"{concept.sourceText}"</p>
         </div>
 
-        <div className="mt-3 grid gap-2 text-xs text-[#4F5E70] sm:grid-cols-2">
+        <div className="mt-3 grid gap-2 text-xs text-[color:var(--muted-foreground)] sm:grid-cols-2">
           <span>Status: {concept.temporality}, {concept.status}</span>
           <span>Certainty: {concept.certainty}</span>
           <span>Subject: {concept.subject}</span>
@@ -197,7 +197,7 @@ function ConceptCard({
             id={`candidate-${concept.id}`}
             value={candidateId}
             onChange={event => setCandidateId(event.target.value)}
-            className="h-10 w-full rounded-md border border-[#DCE6F0] bg-white px-3 text-sm text-[#1F2430]"
+            className="h-10 w-full rounded-md border border-[var(--border)] bg-white px-3 text-sm text-[color:var(--foreground)]"
             disabled={validated.length === 0 || !!concept.clinicianDecision}
           >
             {validated.length === 0 ? (
@@ -211,7 +211,7 @@ function ConceptCard({
             )}
           </select>
           {concept.terminologyCandidates.some(candidate => candidate.validationStatus !== "validated") && (
-            <p className="text-xs text-[#6E7888]">
+            <p className="text-xs text-[color:var(--muted-foreground)]">
               {concept.terminologyCandidates.find(candidate => candidate.validationStatus !== "validated")?.message}
             </p>
           )}
@@ -530,8 +530,8 @@ export function NotesCodingPage() {
             </div>
 
             {draft && (
-              <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3 text-sm text-[#4F5E70]">
-                Draft: <span className="font-mono text-[#3F1D63]">{draft.fhirReference}</span> · {draft.status}
+              <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[color:var(--muted-foreground)]">
+                Draft: <span className="font-mono text-[color:var(--brand)]">{draft.fhirReference}</span> · {draft.status}
               </div>
             )}
           </CardContent>
@@ -543,15 +543,15 @@ export function NotesCodingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {concepts.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-[#C9D8E6] p-6 text-center">
-                <FileSearch className="mx-auto mb-2 size-6 text-[#6E7888]" />
-                <p className="text-sm font-semibold text-[#1F2430]">No clinical note has been analyzed.</p>
-                <p className="mt-1 text-sm text-[#4F5E70]">Paste a clinical note and select Analyze Note.</p>
+              <div className="rounded-lg border border-dashed border-[var(--input)] p-6 text-center">
+                <FileSearch className="mx-auto mb-2 size-6 text-[color:var(--muted-foreground)]" />
+                <p className="text-sm font-semibold text-[color:var(--foreground)]">No clinical note has been analyzed.</p>
+                <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">Paste a clinical note and select Analyze Note.</p>
               </div>
             ) : (
               groupedConcepts.map(group => (
                 <section key={group.category} className="space-y-3">
-                  <h3 className="text-sm font-semibold text-[#3F1D63]">{CATEGORY_LABELS[group.category]}</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--brand)]">{CATEGORY_LABELS[group.category]}</h3>
                   {group.items.map(concept => (
                     <ConceptCard key={concept.id} concept={concept} draftId={draft?.draftId ?? null} onUpdated={handleConceptUpdated} />
                   ))}
@@ -570,48 +570,48 @@ export function NotesCodingPage() {
           {priorAuth ? (
             <>
               <div className="grid gap-3 md:grid-cols-4">
-                <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#6E7888]">Requested therapy</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1F2430]">{priorAuth.requestedTherapy ?? "Not identified"}</p>
+                <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                  <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Requested therapy</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{priorAuth.requestedTherapy ?? "Not identified"}</p>
                 </div>
-                <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#6E7888]">Authorization requirement</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1F2430]">{priorAuth.authorizationRequirement}</p>
+                <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                  <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Authorization requirement</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{priorAuth.authorizationRequirement}</p>
                 </div>
-                <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#6E7888]">Readiness state</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1F2430]">{priorAuth.readinessState}</p>
+                <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                  <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Readiness state</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{priorAuth.readinessState}</p>
                 </div>
-                <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#6E7888]">Reason for escalation</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1F2430]">{priorAuth.reasonForEscalation ?? "Clinician confirmation required"}</p>
+                <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                  <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Reason for escalation</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{priorAuth.reasonForEscalation ?? "Clinician confirmation required"}</p>
                 </div>
               </div>
 
               <div className="grid gap-4 lg:grid-cols-3">
                 <div>
-                  <h3 className="mb-2 text-sm font-semibold text-[#1F2430]">Evidence found</h3>
+                  <h3 className="mb-2 text-sm font-semibold text-[color:var(--foreground)]">Evidence found</h3>
                   <EvidenceList items={priorAuth.evidenceFound} />
                 </div>
                 <div>
-                  <h3 className="mb-2 text-sm font-semibold text-[#1F2430]">Missing or unverified</h3>
+                  <h3 className="mb-2 text-sm font-semibold text-[color:var(--foreground)]">Missing or unverified</h3>
                   <EvidenceList items={priorAuth.missingOrUnverified} />
                 </div>
                 <div>
-                  <h3 className="mb-2 text-sm font-semibold text-[#1F2430]">Coding</h3>
+                  <h3 className="mb-2 text-sm font-semibold text-[color:var(--foreground)]">Coding</h3>
                   <EvidenceList items={priorAuth.coding} />
                 </div>
               </div>
 
               {showEvidence && (
-                <div className="rounded-lg border border-[#DCE6F0] bg-white p-4">
-                  <h3 className="mb-3 text-sm font-semibold text-[#1F2430]">Prior-auth evidence drawer</h3>
+                <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+                  <h3 className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">Prior-auth evidence drawer</h3>
                   <div className="grid gap-3 md:grid-cols-2">
                     {[...priorAuth.evidenceFound, ...priorAuth.missingOrUnverified, ...priorAuth.coding].map(item => (
-                      <div key={item.id} className="rounded-md border border-[#E7EDF4] p-3">
-                        <p className="text-sm font-semibold text-[#1F2430]">{item.label}</p>
-                        <p className="mt-1 text-sm text-[#4F5E70]">{item.details}</p>
-                        {item.reference && <p className="mt-1 font-mono text-xs text-[#3F1D63]">{item.reference}</p>}
+                      <div key={item.id} className="rounded-md border border-[var(--border)] p-3">
+                        <p className="text-sm font-semibold text-[color:var(--foreground)]">{item.label}</p>
+                        <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{item.details}</p>
+                        {item.reference && <p className="mt-1 font-mono text-xs text-[color:var(--brand)]">{item.reference}</p>}
                       </div>
                     ))}
                   </div>
@@ -648,19 +648,19 @@ export function NotesCodingPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {visibleOpportunities.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[#C9D8E6] p-6 text-center">
-              <p className="text-sm font-semibold text-[#1F2430]">No documented SDOH barrier found.</p>
-              <p className="mt-1 text-sm text-[#4F5E70]">No community referral is suggested from the available note.</p>
+            <div className="rounded-lg border border-dashed border-[var(--input)] p-6 text-center">
+              <p className="text-sm font-semibold text-[color:var(--foreground)]">No documented SDOH barrier found.</p>
+              <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">No community referral is suggested from the available note.</p>
             </div>
           ) : (
             visibleOpportunities.map(opportunity => (
-              <div key={opportunity.id} className="rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-4">
+              <div key={opportunity.id} className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#1F2430]">Community Support Opportunity</p>
-                    <p className="mt-1 text-sm text-[#4F5E70]">Documented barrier: {opportunity.documentedBarrier}</p>
-                    <p className="text-sm text-[#4F5E70]">Suggested support: {opportunity.suggestedSupport}</p>
-                    <p className="text-sm text-[#4F5E70]">Reason: {opportunity.reason}</p>
+                    <p className="text-sm font-semibold text-[color:var(--foreground)]">Community Support Opportunity</p>
+                    <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">Documented barrier: {opportunity.documentedBarrier}</p>
+                    <p className="text-sm text-[color:var(--muted-foreground)]">Suggested support: {opportunity.suggestedSupport}</p>
+                    <p className="text-sm text-[color:var(--muted-foreground)]">Reason: {opportunity.reason}</p>
                   </div>
                   <Badge variant={opportunity.approvedConceptRequired ? "warning" : "success"}>
                     {opportunity.approvedConceptRequired ? "Approval needed" : "Concept approved"}
@@ -674,7 +674,7 @@ export function NotesCodingPage() {
                     onChange={event => setResourceName(event.target.value)}
                     placeholder="Enter CHC or community organization details if known"
                   />
-                  <p className="text-xs text-[#6E7888]">No directory is configured. Resource verification remains pending.</p>
+                  <p className="text-xs text-[color:var(--muted-foreground)]">No directory is configured. Resource verification remains pending.</p>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => toast.info("No CHC/resource directory is configured for this environment.")}>
@@ -702,32 +702,32 @@ export function NotesCodingPage() {
         </CardHeader>
         <CardContent>
           {!draft ? (
-            <p className="text-sm text-[#4F5E70]">No draft or coding provenance is available yet.</p>
+            <p className="text-sm text-[color:var(--muted-foreground)]">No draft or coding provenance is available yet.</p>
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                <p className="text-xs font-semibold uppercase text-[#6E7888]">Draft note</p>
-                <p className="mt-1 font-mono text-xs text-[#3F1D63]">{draft.fhirReference}</p>
+              <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Draft note</p>
+                <p className="mt-1 font-mono text-xs text-[color:var(--brand)]">{draft.fhirReference}</p>
               </div>
-              <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                <p className="text-xs font-semibold uppercase text-[#6E7888]">Created resources</p>
+              <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Created resources</p>
                 {draft.createdResourceReferences.length === 0 ? (
-                  <p className="mt-1 text-sm text-[#4F5E70]">No approved concepts have created FHIR resources.</p>
+                  <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">No approved concepts have created FHIR resources.</p>
                 ) : (
                   draft.createdResourceReferences.map(reference => (
-                    <p key={reference} className="mt-1 font-mono text-xs text-[#3F1D63]">
+                    <p key={reference} className="mt-1 font-mono text-xs text-[color:var(--brand)]">
                       {reference}
                     </p>
                   ))
                 )}
               </div>
-              <div className="rounded-md border border-[#DCE6F0] bg-[#F8FAFD] p-3">
-                <p className="text-xs font-semibold uppercase text-[#6E7888]">Provenance</p>
+              <div className="rounded-md border border-[var(--border)] bg-[var(--background)] p-3">
+                <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Provenance</p>
                 {draft.provenanceReferences.length === 0 ? (
-                  <p className="mt-1 text-sm text-[#4F5E70]">No Provenance resources recorded yet.</p>
+                  <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">No Provenance resources recorded yet.</p>
                 ) : (
                   draft.provenanceReferences.map(reference => (
-                    <p key={reference} className="mt-1 font-mono text-xs text-[#3F1D63]">
+                    <p key={reference} className="mt-1 font-mono text-xs text-[color:var(--brand)]">
                       {reference}
                     </p>
                   ))

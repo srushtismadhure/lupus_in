@@ -71,8 +71,8 @@ export function SymptomAssessmentDialog({ open, onOpenChange, patientId, onSaved
         <form onSubmit={handleSubmit} className="space-y-3" noValidate>
           <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
             {SYMPTOM_QUESTIONS.map(q => (
-              <div key={q.linkId} className="flex items-center justify-between gap-3 border-b border-[#E3EAF2] pb-2 last:border-0">
-                <label htmlFor={`symptom-${q.linkId}`} className="text-sm text-[#1F2430]">
+              <div key={q.linkId} className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-2 last:border-0">
+                <label htmlFor={`symptom-${q.linkId}`} className="text-sm text-[color:var(--foreground)]">
                   {q.text}
                 </label>
                 <Select value={severities[q.linkId] ?? "none"} onValueChange={value => setSeverity(q.linkId, value as Severity)} disabled={submitting}>
@@ -89,7 +89,7 @@ export function SymptomAssessmentDialog({ open, onOpenChange, patientId, onSaved
               </div>
             ))}
           </div>
-          <p className="text-xs text-[#4F5E70]">
+          <p className="text-xs text-[color:var(--muted-foreground)]">
             This assessment does not automatically label any symptom as a medication side effect. A clinician must review and confirm
             before an adverse-event relationship is documented.
           </p>

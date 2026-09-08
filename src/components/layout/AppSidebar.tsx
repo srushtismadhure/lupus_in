@@ -45,10 +45,10 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="min-h-screen w-16 shrink-0 self-stretch bg-[#2B123E] text-[#D7ECFA] md:w-60">
+    <aside className="min-h-screen w-16 shrink-0 self-stretch bg-[var(--brand)] text-[color:var(--sidebar-foreground)] md:w-60">
       <div className="sticky top-0 flex h-screen flex-col justify-between">
         <div>
-          <div className="flex items-center justify-center gap-2 px-3 py-5 text-[#F7FBFF] md:justify-start md:px-5">
+          <div className="flex items-center justify-center gap-2 px-3 py-5 text-[color:var(--card)] md:justify-start md:px-5">
             <img src={logo} alt="LoopedIn" className="size-6" />
             <span className="hidden text-lg font-semibold md:inline">LoopedIn</span>
           </div>
@@ -64,8 +64,8 @@ export function AppSidebar() {
                   title={item.label}
                   className={({ isActive }) =>
                     cn(
-                      "flex min-h-10 items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm font-medium outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-[3px] focus-visible:ring-[#78B7E3]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2B123E] md:min-h-9 md:justify-start md:px-3",
-                      isActive ? "bg-[rgba(215,236,250,0.15)] text-[#F7FBFF]" : "bg-transparent text-[#D7ECFA]",
+                      "flex min-h-10 items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm font-medium outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-[3px] focus-visible:ring-[var(--sky-blue)]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--brand)] md:min-h-9 md:justify-start md:px-3",
+                      isActive ? "bg-[rgba(128,192,240,0.16)] text-[color:var(--card)]" : "bg-transparent text-[color:var(--sidebar-foreground)]",
                     )
                   }
                 >
@@ -75,7 +75,7 @@ export function AppSidebar() {
               ) : (
                 <div
                   key={item.label}
-                  className="flex min-h-10 cursor-not-allowed items-center justify-center rounded-lg bg-transparent px-2 py-2 text-sm text-[#D7ECFA]/60 md:min-h-9 md:justify-between md:px-3"
+                  className="flex min-h-10 cursor-not-allowed items-center justify-center rounded-lg bg-transparent px-2 py-2 text-sm text-[color:var(--sidebar-foreground)]/60 md:min-h-9 md:justify-between md:px-3"
                   title="Coming later"
                 >
                   <span className="flex items-center gap-3">
@@ -91,7 +91,7 @@ export function AppSidebar() {
 
         <div className="border-t border-white/10 px-2 py-4 md:px-5">
           {user && (
-            <p className="mb-2 hidden text-xs text-[#D7ECFA] md:block">
+            <p className="mb-2 hidden text-xs text-[color:var(--sidebar-foreground)] md:block">
               {user.role === "nurse" ? "RN Care Coordinator" : "Clinician"} · {user.displayName}
             </p>
           )}
@@ -99,14 +99,14 @@ export function AppSidebar() {
             <span
               className={cn(
                 "size-2 rounded-full",
-                connectionStatus === "connected" && "bg-[#4F9468]",
+                connectionStatus === "connected" && "bg-[var(--success)]",
                 connectionStatus === "error" && "bg-[#C84F5C]",
                 connectionStatus === "checking" && "bg-white/30",
               )}
             />
-            <span className="hidden text-[#D7ECFA] md:inline">FHIR data source</span>
+            <span className="hidden text-[color:var(--sidebar-foreground)] md:inline">FHIR data source</span>
           </div>
-          <p className="mt-0.5 hidden text-xs font-semibold text-[#F7FBFF] md:block">
+          <p className="mt-0.5 hidden text-xs font-semibold text-[color:var(--card)] md:block">
             {connectionStatus === "connected" && "Connected"}
             {connectionStatus === "error" && "Disconnected"}
             {connectionStatus === "checking" && "Checking..."}

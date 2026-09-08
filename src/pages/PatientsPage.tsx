@@ -89,7 +89,7 @@ export function PatientsPage() {
       {loading && (
         <div className="space-y-3">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="h-14 animate-pulse rounded-lg bg-[#E7F1F8]" />
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-[var(--info-bg)]" />
           ))}
         </div>
       )}
@@ -128,16 +128,16 @@ export function PatientsPage() {
                   </Button>
                 ))}
               </div>
-              <label className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#4F5E70]">
+              <label className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-1 text-sm font-medium text-[color:var(--muted-foreground)]">
                 <input
                   type="checkbox"
                   checked={includeInactive}
                   onChange={e => setIncludeInactive(e.target.checked)}
-                  className="size-4 rounded border-[#AFCFE7] accent-[#43205F] outline-none focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/35 focus-visible:ring-offset-2"
+                  className="size-4 rounded border-[var(--info-border)] accent-[var(--primary)] outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2"
                 />
                 Include inactive
               </label>
-              <span className="text-sm font-medium text-[#4F5E70]">{filteredAllPatients.length} patients</span>
+              <span className="text-sm font-medium text-[color:var(--muted-foreground)]">{filteredAllPatients.length} patients</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -153,8 +153,8 @@ export function PatientsPage() {
           </div>
 
           {filteredAllPatients.length === 0 ? (
-            <Card className="border-dashed bg-[#F8FBFD]">
-              <CardContent className="text-center text-sm font-medium text-[#4F5E70]">No patients found.</CardContent>
+            <Card className="border-dashed bg-[var(--background)]">
+              <CardContent className="text-center text-sm font-medium text-[color:var(--muted-foreground)]">No patients found.</CardContent>
             </Card>
           ) : (
             <AllPatientsTable patients={filteredAllPatients} onEdit={setEditPatient} onDeactivate={setDeactivateTarget} />

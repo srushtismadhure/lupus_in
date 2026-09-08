@@ -13,11 +13,11 @@ export function MedicationHistorySection({ inactiveOrders, statements, administr
 
   return (
     <section>
-      <h2 className="mb-3 text-base font-semibold text-[#1F2430]">Medication history</h2>
+      <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">Medication history</h2>
 
       {!hasAnyHistory ? (
-        <Card className="border-dashed bg-[#F8FBFD]">
-          <CardContent className="text-center text-sm text-[#4F5E70]">No medication history is available.</CardContent>
+        <Card className="border-dashed bg-[var(--background)]">
+          <CardContent className="text-center text-sm text-[color:var(--muted-foreground)]">No medication history is available.</CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -27,16 +27,16 @@ export function MedicationHistorySection({ inactiveOrders, statements, administr
             </CardHeader>
             <CardContent>
               {inactiveOrders.length === 0 ? (
-                <p className="text-xs text-[#4F5E70]">No prior orders.</p>
+                <p className="text-xs text-[color:var(--muted-foreground)]">No prior orders.</p>
               ) : (
                 <ul className="space-y-2">
                   {inactiveOrders.map(item => (
-                    <li key={item.id} className="border-b border-[#E3EAF2] pb-2 text-xs last:border-0">
+                    <li key={item.id} className="border-b border-[var(--border)] pb-2 text-xs last:border-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-[#1F2430]">{item.medicationText}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{item.medicationText}</span>
                         <Badge variant="neutral">{item.status}</Badge>
                       </div>
-                      <p className="text-[#4F5E70]">{item.startDate ?? "Not available"}</p>
+                      <p className="text-[color:var(--muted-foreground)]">{item.startDate ?? "Not available"}</p>
                     </li>
                   ))}
                 </ul>
@@ -50,20 +50,20 @@ export function MedicationHistorySection({ inactiveOrders, statements, administr
             </CardHeader>
             <CardContent>
               {statements.length === 0 ? (
-                <p className="text-xs text-[#4F5E70]">No patient-reported medication history is available.</p>
+                <p className="text-xs text-[color:var(--muted-foreground)]">No patient-reported medication history is available.</p>
               ) : (
                 <ul className="space-y-2">
                   {statements.map(s => (
-                    <li key={s.id} className="border-b border-[#E3EAF2] pb-2 text-xs last:border-0">
+                    <li key={s.id} className="border-b border-[var(--border)] pb-2 text-xs last:border-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-[#1F2430]">{s.medicationText}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{s.medicationText}</span>
                         <Badge variant="neutral">{s.status}</Badge>
                       </div>
-                      <p className="text-[#4F5E70]">
+                      <p className="text-[color:var(--muted-foreground)]">
                         {s.dose ? `${s.dose} · ` : ""}
                         {s.dateAsserted ?? "Not available"}
                       </p>
-                      {s.note && <p className="text-[#4F5E70]">{s.note}</p>}
+                      {s.note && <p className="text-[color:var(--muted-foreground)]">{s.note}</p>}
                     </li>
                   ))}
                 </ul>
@@ -77,16 +77,16 @@ export function MedicationHistorySection({ inactiveOrders, statements, administr
             </CardHeader>
             <CardContent>
               {administrations.length === 0 ? (
-                <p className="text-xs text-[#4F5E70]">No administration records are available.</p>
+                <p className="text-xs text-[color:var(--muted-foreground)]">No administration records are available.</p>
               ) : (
                 <ul className="space-y-2">
                   {administrations.map(a => (
-                    <li key={a.id} className="border-b border-[#E3EAF2] pb-2 text-xs last:border-0">
+                    <li key={a.id} className="border-b border-[var(--border)] pb-2 text-xs last:border-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-[#1F2430]">{a.medicationText}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{a.medicationText}</span>
                         <Badge variant="neutral">{a.status}</Badge>
                       </div>
-                      <p className="text-[#4F5E70]">
+                      <p className="text-[color:var(--muted-foreground)]">
                         {a.dose ? `${a.dose} · ` : ""}
                         {a.effectiveDate ?? "Not available"}
                       </p>

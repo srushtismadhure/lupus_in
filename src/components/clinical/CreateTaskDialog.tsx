@@ -106,7 +106,7 @@ export function CreateTaskDialog({ open, onOpenChange, patientId, onCreated }: C
             <div className="space-y-1.5">
               <Label htmlFor="dueDate">Due date</Label>
               <Input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} disabled={submitting} />
-              {overdueWarning && <p className="text-xs text-[#9A6418]">This due date is already overdue.</p>}
+              {overdueWarning && <p className="text-xs text-[color:var(--warning-text)]">This due date is already overdue.</p>}
             </div>
           </div>
 

@@ -57,7 +57,7 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-sm space-y-5">
-      <p className="text-xs font-semibold uppercase text-[#4F5E70]">Demo roles</p>
+      <p className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Demo roles</p>
 
       {error && (
         <Alert variant="destructive">
@@ -81,12 +81,12 @@ export function LoginForm() {
         type="button"
         onClick={handleResetDemoSession}
         disabled={submitting}
-        className="min-h-8 w-full rounded-lg text-center text-sm font-medium text-[#4F5E70] underline-offset-4 outline-none hover:text-[#245D86] hover:underline focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/35 focus-visible:ring-offset-2 disabled:opacity-50"
+        className="min-h-8 w-full rounded-lg text-center text-sm font-medium text-[color:var(--muted-foreground)] underline-offset-4 outline-none hover:text-[color:var(--link)] hover:underline focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2 disabled:opacity-50"
       >
         Reset demo session
       </button>
 
-      <p className="text-center text-xs font-medium text-[#4F5E70]">
+      <p className="text-center text-xs font-medium text-[color:var(--muted-foreground)]">
         This environment contains synthetic demonstration data only.
       </p>
     </div>

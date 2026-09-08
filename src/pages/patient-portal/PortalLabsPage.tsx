@@ -37,15 +37,15 @@ export function PortalLabsPage() {
           {GROUPS.map(group => {
             const results = data.results.filter(result => result.category === group.id);
             if (results.length === 0) return null;
-            return <section key={group.id} aria-labelledby={`lab-group-${group.id}`}><h2 id={`lab-group-${group.id}`} className="text-lg font-semibold text-[#1F2430]">{group.label}</h2><div className="mt-3 grid gap-4 lg:grid-cols-2">{results.map(result => (
-              <article key={result.id} className="rounded-lg border border-[#DCE6F0] bg-white p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold text-[#1F2430]">{result.plainLanguageName}</h3><p className="mt-1 text-xs text-[#697586]">{result.name}</p></div><PatientStatusBadge label={result.statusLabel} /></div>
-                <p className="mt-4 text-2xl font-semibold text-[#1F2430]">{result.value ?? "Not available"} <span className="text-sm font-medium text-[#526172]">{result.unit ?? ""}</span></p>
-                <p className="mt-1 text-sm text-[#526172]">{dateOnly(result.date)}</p>
-                <dl className="mt-4 grid gap-3 sm:grid-cols-2"><div><dt className="text-xs font-semibold text-[#697586]">Reported reference range</dt><dd className="mt-1 text-sm text-[#344253]">{result.referenceRange?.text ?? ([result.referenceRange?.low, result.referenceRange?.high].filter(value => value !== undefined).join(" to ") || "Not provided")}</dd></div><div><dt className="text-xs font-semibold text-[#697586]">Trend</dt><dd className="mt-1 text-sm text-[#344253]">{result.trendLabel}</dd></div></dl>
+            return <section key={group.id} aria-labelledby={`lab-group-${group.id}`}><h2 id={`lab-group-${group.id}`} className="text-lg font-semibold text-[color:var(--foreground)]">{group.label}</h2><div className="mt-3 grid gap-4 lg:grid-cols-2">{results.map(result => (
+              <article key={result.id} className="rounded-lg border border-[var(--border)] bg-white p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold text-[color:var(--foreground)]">{result.plainLanguageName}</h3><p className="mt-1 text-xs text-[color:var(--muted-foreground)]">{result.name}</p></div><PatientStatusBadge label={result.statusLabel} /></div>
+                <p className="mt-4 text-2xl font-semibold text-[color:var(--foreground)]">{result.value ?? "Not available"} <span className="text-sm font-medium text-[color:var(--muted-foreground)]">{result.unit ?? ""}</span></p>
+                <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{dateOnly(result.date)}</p>
+                <dl className="mt-4 grid gap-3 sm:grid-cols-2"><div><dt className="text-xs font-semibold text-[color:var(--muted-foreground)]">Reported reference range</dt><dd className="mt-1 text-sm text-[color:var(--foreground)]">{result.referenceRange?.text ?? ([result.referenceRange?.low, result.referenceRange?.high].filter(value => value !== undefined).join(" to ") || "Not provided")}</dd></div><div><dt className="text-xs font-semibold text-[color:var(--muted-foreground)]">Trend</dt><dd className="mt-1 text-sm text-[color:var(--foreground)]">{result.trendLabel}</dd></div></dl>
                 <div className="mt-4"><PatientStatusBadge label={result.reviewStatusLabel} /></div>
-                <p className="mt-4 text-sm leading-6 text-[#526172]">{result.whatItMayMean}</p>
-                <Link to={`/portal/labs/${encodeURIComponent(result.id)}`} className="mt-4 inline-flex min-h-11 items-center gap-2 border-t border-[#E6ECF2] pt-3 text-sm font-semibold text-[#3F1D63] underline-offset-4 hover:underline">View result details<ArrowRight className="size-4" aria-hidden="true" /></Link>
+                <p className="mt-4 text-sm leading-6 text-[color:var(--muted-foreground)]">{result.whatItMayMean}</p>
+                <Link to={`/portal/labs/${encodeURIComponent(result.id)}`} className="mt-4 inline-flex min-h-11 items-center gap-2 border-t border-[var(--border)] pt-3 text-sm font-semibold text-[color:var(--brand)] underline-offset-4 hover:underline">View result details<ArrowRight className="size-4" aria-hidden="true" /></Link>
               </article>
             ))}</div></section>;
           })}

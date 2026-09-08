@@ -14,7 +14,7 @@ export function PatientSubNav({ patientId }: { patientId: string }) {
   ];
 
   return (
-    <nav className="mb-4 flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-1">
+    <nav className="mb-4 flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--background)] p-1">
       {items.map(item => (
         <NavLink
           key={item.to}
@@ -23,7 +23,7 @@ export function PatientSubNav({ patientId }: { patientId: string }) {
           className={({ isActive }) =>
             cn(
               "inline-flex min-h-8 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              isActive ? "bg-white text-[#3F1D63] shadow-sm" : "text-[#4F5E70] hover:text-[#1F2430]",
+              isActive ? "bg-white text-[color:var(--brand)] shadow-sm" : "text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]",
             )
           }
         >

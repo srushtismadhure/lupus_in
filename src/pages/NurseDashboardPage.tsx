@@ -47,10 +47,10 @@ export function NurseDashboardPage() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {[0, 1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-24 animate-pulse rounded-lg bg-[#E7F1F8]" />
+              <div key={i} className="h-24 animate-pulse rounded-lg bg-[var(--info-bg)]" />
             ))}
           </div>
-          <div className="h-48 animate-pulse rounded-lg bg-[#E7F1F8]" />
+          <div className="h-48 animate-pulse rounded-lg bg-[var(--info-bg)]" />
         </div>
       )}
 
@@ -77,7 +77,7 @@ export function NurseDashboardPage() {
           </div>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-[#1F2430]">MNT Referral Queue</h2>
+            <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">MNT Referral Queue</h2>
             <MntReferralQueueTable items={data.queue} />
           </section>
         </>

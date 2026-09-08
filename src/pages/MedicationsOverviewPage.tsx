@@ -25,10 +25,10 @@ interface MedicationWorklistRow {
 function CountCell({ value, denominator, suffix }: { value: number; denominator: number; suffix: string }) {
   return (
     <span className="inline-flex flex-col">
-      <span className="font-semibold text-[#1F2430]">
+      <span className="font-semibold text-[color:var(--foreground)]">
         {value} / {denominator}
       </span>
-      <span className="text-xs text-[#4F5E70]">{suffix}</span>
+      <span className="text-xs text-[color:var(--muted-foreground)]">{suffix}</span>
     </span>
   );
 }
@@ -88,7 +88,7 @@ export function MedicationsOverviewPage() {
       {loading && (
         <div className="space-y-3">
           {[0, 1].map(i => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-[#E7F1F8]" />
+            <div key={i} className="h-16 animate-pulse rounded-lg bg-[var(--info-bg)]" />
           ))}
         </div>
       )}
@@ -109,7 +109,7 @@ export function MedicationsOverviewPage() {
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Badge variant="purple">{rows.length} lupus-nephritis patients</Badge>
-              <span className="text-sm font-medium text-[#4F5E70]">Counts show numerator / denominator.</span>
+              <span className="text-sm font-medium text-[color:var(--muted-foreground)]">Counts show numerator / denominator.</span>
             </div>
             <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
               <RefreshCw className="size-4" />
@@ -118,8 +118,8 @@ export function MedicationsOverviewPage() {
           </div>
 
           {rows.length === 0 ? (
-            <Card className="border-dashed bg-[#F8FBFD]">
-              <CardContent className="text-center text-sm font-medium text-[#4F5E70]">
+            <Card className="border-dashed bg-[var(--background)]">
+              <CardContent className="text-center text-sm font-medium text-[color:var(--muted-foreground)]">
                 No active lupus-nephritis patients were found.
               </CardContent>
             </Card>
@@ -128,7 +128,7 @@ export function MedicationsOverviewPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+                    <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
                       <th className="px-5 py-3 font-semibold">Patient</th>
                       <th className="px-5 py-3 font-semibold">Active medication count</th>
                       <th className="px-5 py-3 font-semibold">Monitoring gaps</th>
@@ -140,10 +140,10 @@ export function MedicationsOverviewPage() {
                   </thead>
                   <tbody>
                     {rows.map(row => (
-                      <tr key={row.patient.patient.id} className="border-b border-[#E3EAF2] transition-colors last:border-0 hover:bg-[#F2F8FC]">
+                      <tr key={row.patient.patient.id} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--blue-panel)]">
                         <td className="px-5 py-4">
-                          <p className="font-semibold text-[#1F2430]">{row.patient.name}</p>
-                          <p className="mt-1 text-xs text-[#4F5E70]">{row.patient.primaryConditionText ?? "Lupus nephritis"}</p>
+                          <p className="font-semibold text-[color:var(--foreground)]">{row.patient.name}</p>
+                          <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">{row.patient.primaryConditionText ?? "Lupus nephritis"}</p>
                         </td>
                         <td className="px-5 py-4">
                           <CountCell value={row.activeOrders.length} denominator={row.currentOrders.length} suffix="current orders" />

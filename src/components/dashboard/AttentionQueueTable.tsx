@@ -35,8 +35,8 @@ export function AttentionQueueTable({ patients }: { patients: WorklistPatientVie
 
   if (patients.length === 0) {
     return (
-      <Card className="border-dashed bg-[#F8FBFD]">
-        <CardContent className="text-center text-sm font-medium text-[#4F5E70]">
+      <Card className="border-dashed bg-[var(--background)]">
+        <CardContent className="text-center text-sm font-medium text-[color:var(--muted-foreground)]">
           No patients currently require attention.
         </CardContent>
       </Card>
@@ -48,7 +48,7 @@ export function AttentionQueueTable({ patients }: { patients: WorklistPatientVie
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+            <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
               <th className="px-5 py-3 font-semibold">Priority</th>
               <th className="px-5 py-3 font-semibold">Patient</th>
               <th className="px-5 py-3 font-semibold">Reason flagged</th>
@@ -62,19 +62,19 @@ export function AttentionQueueTable({ patients }: { patients: WorklistPatientVie
           </thead>
           <tbody>
             {patients.map((view, index) => (
-              <tr key={view.patient.id} className="border-b border-[#E3EAF2] transition-colors last:border-0 hover:bg-[#F2F8FC]">
-                <td className="px-5 py-4 font-mono text-xs text-[#4F5E70]">{index + 1}</td>
-                <td className="px-5 py-4 font-semibold text-[#1F2430]">{view.name}</td>
+              <tr key={view.patient.id} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--blue-panel)]">
+                <td className="px-5 py-4 font-mono text-xs text-[color:var(--muted-foreground)]">{index + 1}</td>
+                <td className="px-5 py-4 font-semibold text-[color:var(--foreground)]">{view.name}</td>
                 <td className="px-5 py-4">
                   <Badge variant={reasonBadgeVariant(view)}>
                     {view.primaryAttentionReason ? ATTENTION_REASON_LABELS[view.primaryAttentionReason] : "—"}
                   </Badge>
                 </td>
-                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestUpcr)}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{formatObservationCell(view.latestEgfr)}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestUpcr)}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestEgfr)}</td>
                 <td className="px-5 py-4">{monitoringBadge(view.monitoringStatus)}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">{view.openTaskCount}</td>
-                <td className="px-5 py-4 text-[#4F5E70]">
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.openTaskCount}</td>
+                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">
                   {view.lastUpdated ? new Date(view.lastUpdated).toLocaleDateString() : "—"}
                 </td>
                 <td className="px-5 py-4 text-right">

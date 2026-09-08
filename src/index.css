@@ -19,10 +19,8 @@
 }
 
 .sle-damage-border {
-  border: 2px solid transparent;
-  background:
-    linear-gradient(#fff, #fff) padding-box,
-    repeating-linear-gradient(135deg, #65408a 0 6px, #b9dcf4 6px 12px) border-box;
+  border: 2px dashed var(--primary);
+  background: var(--card);
 }
 
 @media (forced-colors: active) {

@@ -50,12 +50,12 @@ export function KidneyTrendChart({ observations }: { observations: fhir4.Observa
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#E8EDF2" strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#676B78" }} />
-                <YAxis tick={{ fontSize: 12, fill: "#676B78" }} />
-                <Tooltip contentStyle={{ background: "#FFFFFF", border: "1px solid #D2E9F7", fontSize: 12 }} />
-                <Line type="monotone" dataKey="upcr" name="UPCR" stroke="#3F1D63" strokeWidth={2} dot connectNulls={false} />
-                <Line type="monotone" dataKey="egfr" name="eGFR" stroke="#78B7E3" strokeWidth={2} dot connectNulls={false} />
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--info-border)", fontSize: 12 }} />
+                <Line type="monotone" dataKey="upcr" name="UPCR" stroke="var(--chart-1)" strokeWidth={2} dot connectNulls={false} />
+                <Line type="monotone" dataKey="egfr" name="eGFR" stroke="var(--chart-2)" strokeWidth={2} dot connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

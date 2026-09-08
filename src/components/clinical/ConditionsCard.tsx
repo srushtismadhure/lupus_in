@@ -16,7 +16,7 @@ export function ConditionsCard({ conditions }: { conditions: fhir4.Condition[] }
         {conditions.length === 0 && <p className="text-sm text-muted-foreground">No conditions available.</p>}
         <ul className="space-y-2">
           {conditions.map(condition => (
-            <li key={condition.id} className="flex items-start justify-between gap-3 border-b border-[#E4E7EC] pb-2 last:border-0">
+            <li key={condition.id} className="flex items-start justify-between gap-3 border-b border-[var(--border)] pb-2 last:border-0">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground">{formatConditionText(condition)}</span>

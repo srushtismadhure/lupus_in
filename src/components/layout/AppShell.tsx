@@ -4,7 +4,7 @@ import { AppHeader } from "./AppHeader";
 
 export function AppShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-[linear-gradient(180deg,#F8FBFD_0%,#F3F6FA_100%)]">
+    <div className="flex min-h-screen bg-background">
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader title={title} subtitle={subtitle} />

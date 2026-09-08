@@ -27,17 +27,17 @@ export function MonitoringMatrix({ regimenItems }: { regimenItems: MedicationReg
 
   return (
     <section>
-      <h2 className="mb-3 text-base font-semibold text-[#1F2430]">Monitoring and side-effect matrix</h2>
+      <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">Monitoring and side-effect matrix</h2>
       {rows.length === 0 ? (
-        <Card className="border-dashed bg-[#F8FBFD]">
-          <CardContent className="text-center text-sm text-[#4F5E70]">No configured monitoring parameters apply to this patient's active regimen.</CardContent>
+        <Card className="border-dashed bg-[var(--background)]">
+          <CardContent className="text-center text-sm text-[color:var(--muted-foreground)]">No configured monitoring parameters apply to this patient's active regimen.</CardContent>
         </Card>
       ) : (
         <Card className="gap-0 overflow-hidden p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-[#DCE6F0] bg-[#F8FAFD] text-xs uppercase text-[#4F5E70]">
+                <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
                   <th className="px-4 py-3 font-semibold">Medication</th>
                   <th className="px-4 py-3 font-semibold">Safety domain</th>
                   <th className="px-4 py-3 font-semibold">Patient evidence</th>
@@ -47,11 +47,11 @@ export function MonitoringMatrix({ regimenItems }: { regimenItems: MedicationReg
               </thead>
               <tbody>
                 {rows.map((row, index) => (
-                  <tr key={`${row.medication}-${row.domain}-${index}`} className="border-b border-[#E3EAF2] last:border-0">
-                    <td className="px-4 py-3 font-medium text-[#1F2430]">{row.medication}</td>
-                    <td className="px-4 py-3 text-[#4F5E70]">{row.domain}</td>
-                    <td className="px-4 py-3 text-[#4F5E70]">{row.evidence}</td>
-                    <td className="px-4 py-3 text-[#4F5E70]">{row.status.lastDate ?? "Not available"}</td>
+                  <tr key={`${row.medication}-${row.domain}-${index}`} className="border-b border-[var(--border)] last:border-0">
+                    <td className="px-4 py-3 font-medium text-[color:var(--foreground)]">{row.medication}</td>
+                    <td className="px-4 py-3 text-[color:var(--muted-foreground)]">{row.domain}</td>
+                    <td className="px-4 py-3 text-[color:var(--muted-foreground)]">{row.evidence}</td>
+                    <td className="px-4 py-3 text-[color:var(--muted-foreground)]">{row.status.lastDate ?? "Not available"}</td>
                     <td className="px-4 py-3">{monitoringBadge(row.status.status)}</td>
                   </tr>
                 ))}

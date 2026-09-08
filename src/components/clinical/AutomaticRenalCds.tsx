@@ -69,7 +69,7 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
   const cards = (result?.response.cards ?? []).filter(c => !dismissedUuids.has(c.uuid));
 
   return (
-    <Card className="mb-6 border-[#E4DAEC]">
+    <Card className="mb-6 border-[var(--info-border)]">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">LoopedIn Clinical CDS — automatic patient-view simulation</CardTitle>
@@ -85,7 +85,7 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
         </p>
 
         {(state === "discovering" || state === "evaluating") && (
-          <p className="text-sm text-[#4F5E70]">Evaluating renal monitoring…</p>
+          <p className="text-sm text-[color:var(--muted-foreground)]">Evaluating renal monitoring…</p>
         )}
 
         {state === "error" && (
@@ -98,7 +98,7 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
         )}
 
         {state === "complete" && cards.length === 0 && (
-          <p className="text-sm text-[#4F5E70]">No actionable renal monitoring concerns identified.</p>
+          <p className="text-sm text-[color:var(--muted-foreground)]">No actionable renal monitoring concerns identified.</p>
         )}
 
         {state === "complete" && cards.length > 0 && (
@@ -110,38 +110,38 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
         )}
 
         {result && (
-          <div className="border-t border-[#EEF2F6] pt-3">
+          <div className="border-t border-[var(--muted)] pt-3">
             <button
               type="button"
               onClick={() => setEvidenceOpen(v => !v)}
-              className="flex items-center gap-1 text-xs font-medium text-[#3F1D63]"
+              className="flex items-center gap-1 text-xs font-medium text-[color:var(--brand)]"
               aria-expanded={evidenceOpen}
             >
               {evidenceOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
               CDS Developer Evidence
             </button>
             {evidenceOpen && (
-              <div className="mt-3 space-y-3 text-xs text-[#4F5E70]">
+              <div className="mt-3 space-y-3 text-xs text-[color:var(--muted-foreground)]">
                 <div>
-                  <p className="font-semibold text-[#1F2430]">Discovery</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">Discovery</p>
                   <p>Service: {result.discovery.services.find(s => s.hook === "patient-view")?.id ?? "unknown"}</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1F2430]">Request</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">Request</p>
                   <p>hook: {result.request.hook}</p>
                   <p>hookInstance: {result.request.hookInstance}</p>
                   <p>context.patientId: {result.request.context.patientId}</p>
                   <p>context.userId: {result.request.context.userId ?? "—"}</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1F2430]">Resource counts</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">Resource counts</p>
                   <p>
                     Conditions: {result.response.debug.conditionCount} · Observations: {result.response.debug.observationCount} ·
                     Tasks: {result.response.debug.taskCount}
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1F2430]">Normalized measurements</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">Normalized measurements</p>
                   {result.response.debug.normalized.measurements.length === 0 ? (
                     <p>None</p>
                   ) : (
@@ -155,7 +155,7 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1F2430]">Rules fired</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">Rules fired</p>
                   <p>{result.response.debug.firedRuleIds.length > 0 ? result.response.debug.firedRuleIds.join(", ") : "None"}</p>
                   <p>Rule version: {result.response.debug.ruleVersion}</p>
                 </div>

@@ -7,15 +7,15 @@ export function RenalProvenance({ items }: { items: Array<FhirProvenance | undef
   if (provenance.length === 0) return null;
 
   return (
-    <details className="mt-4 rounded-md border border-[#DCE6F0] bg-[#F8FAFD] px-3 py-2 text-xs text-[#4F5E70]">
-      <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-[#344054] outline-none focus-visible:ring-[3px] focus-visible:ring-[#78B7E3]/45">
+    <details className="mt-4 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs text-[color:var(--muted-foreground)]">
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-[color:var(--foreground)] outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--sky-blue)]/45">
         <Database className="size-3.5" aria-hidden="true" />
         FHIR provenance
       </summary>
       <div className="mt-3 space-y-2">
         {provenance.map((item, index) => (
-          <div key={`${item.resourceType}-${item.resourceId ?? index}`} className="grid gap-1 border-t border-[#E4EAF0] pt-2 first:border-0 first:pt-0 sm:grid-cols-[150px_1fr]">
-            <span className="font-medium text-[#344054]">{item.resourceType}</span>
+          <div key={`${item.resourceType}-${item.resourceId ?? index}`} className="grid gap-1 border-t border-[var(--border)] pt-2 first:border-0 first:pt-0 sm:grid-cols-[150px_1fr]">
+            <span className="font-medium text-[color:var(--foreground)]">{item.resourceType}</span>
             <span>
               {item.display}
               {item.code ? ` · ${item.code}` : ""}

@@ -36,7 +36,7 @@ export function MetricCard({ title, accent = "purple", value, unit, observation,
   const interpretation = observation ? getObservationInterpretation(observation) : undefined;
 
   return (
-    <Card className={cn("border-t-2", accent === "purple" ? "border-t-[#3F1D63]" : "border-t-[#78B7E3]")}>
+    <Card className={cn("border-t-2", accent === "purple" ? "border-t-[var(--brand)]" : "border-t-[var(--sky-blue)]")}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>

@@ -172,12 +172,12 @@ export function AddMedicationDialog({ open, onOpenChange, patientId, conditions,
                 disabled={submitting}
               />
               {showSuggestions && suggestions.length > 0 && (
-                <ul className="absolute z-10 mt-1 w-full rounded-md border border-[#DCE6F0] bg-white shadow-md">
+                <ul className="absolute z-10 mt-1 w-full rounded-md border border-[var(--border)] bg-white shadow-md">
                   {suggestions.map(s => (
                     <li key={s.code}>
                       <button
                         type="button"
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-[#F2F8FC]"
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--blue-panel)]"
                         onClick={() => {
                           setMedicationText(s.display);
                           setSelectedCode({ system: s.system, code: s.code });
@@ -190,7 +190,7 @@ export function AddMedicationDialog({ open, onOpenChange, patientId, conditions,
                   ))}
                 </ul>
               )}
-              {selectedCode && <p className="font-mono text-xs text-[#4F5E70]">Code: {selectedCode.code}</p>}
+              {selectedCode && <p className="font-mono text-xs text-[color:var(--muted-foreground)]">Code: {selectedCode.code}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -242,7 +242,7 @@ export function AddMedicationDialog({ open, onOpenChange, patientId, conditions,
                   value={conditionId}
                   onChange={e => setConditionId(e.target.value)}
                   disabled={submitting}
-                  className="h-9 w-full rounded-md border border-[#D2E9F7] bg-transparent px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-[var(--info-border)] bg-transparent px-3 text-sm"
                 >
                   <option value="">Not specified</option>
                   {conditions.map(c => (
@@ -274,9 +274,9 @@ export function AddMedicationDialog({ open, onOpenChange, patientId, conditions,
           </form>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-md bg-[#F8FAFD] px-3 py-2 text-sm">
-              <p className="font-medium text-[#1F2430]">{draft.medicationCodeableConcept?.text}</p>
-              <p className="text-xs text-[#4F5E70]">Draft saved. Run a safety review before signing.</p>
+            <div className="rounded-md bg-[var(--background)] px-3 py-2 text-sm">
+              <p className="font-medium text-[color:var(--foreground)]">{draft.medicationCodeableConcept?.text}</p>
+              <p className="text-xs text-[color:var(--muted-foreground)]">Draft saved. Run a safety review before signing.</p>
             </div>
 
             {!evaluation && (
@@ -288,17 +288,17 @@ export function AddMedicationDialog({ open, onOpenChange, patientId, conditions,
             {evaluation && (
               <div className="space-y-2">
                 {evaluation.cards.length === 0 ? (
-                  <p className="text-sm text-[#2F7A4C]">No conflicts detected from available data.</p>
+                  <p className="text-sm text-[color:var(--success)]">No conflicts detected from available data.</p>
                 ) : (
                   evaluation.cards.map((card, i) => (
-                    <div key={i} className="rounded-md border border-[#F5DAA7] bg-[#FFF4DD] p-3">
+                    <div key={i} className="rounded-md border border-[var(--yellow)] bg-[var(--warning-bg)] p-3">
                       <div className="mb-1 flex items-center gap-2">
                         <Badge variant={card.indicator === "critical" ? "destructive" : "warning"}>
                           {card.indicator === "critical" ? "High priority" : "Warning"}
                         </Badge>
-                        <span className="text-sm font-medium text-[#1F2430]">{card.summary}</span>
+                        <span className="text-sm font-medium text-[color:var(--foreground)]">{card.summary}</span>
                       </div>
-                      <p className="whitespace-pre-line text-xs text-[#4F5E70]">{card.detail}</p>
+                      <p className="whitespace-pre-line text-xs text-[color:var(--muted-foreground)]">{card.detail}</p>
                     </div>
                   ))
                 )}

@@ -6,8 +6,8 @@ import { SessionTimeoutDialog } from "./SessionTimeoutDialog";
 
 export function PortalLayout() {
   return (
-    <div className="portal-root min-h-screen bg-[#F6F9FC] text-[#1F2430]">
-      <a href="#portal-main-content" className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-3 font-semibold text-[#2B123E] shadow-lg outline-none focus:translate-y-0 focus:ring-[3px] focus:ring-[#4F97C8]">Skip to main content</a>
+    <div className="portal-root min-h-screen bg-[var(--background)] text-[color:var(--foreground)]">
+      <a href="#portal-main-content" className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-3 font-semibold text-[color:var(--brand)] shadow-lg outline-none focus:translate-y-0 focus:ring-[3px] focus:ring-[var(--primary)]">Skip to main content</a>
       <PortalSidebar />
       <div className="min-h-screen lg:pl-64">
         <PortalHeader />

@@ -119,9 +119,9 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 function Metric({ label, value, title }: { label: string; value: string | number | null | undefined; title?: string }) {
   return (
-    <div className="rounded-lg border border-[#E3EAF2] bg-[#F8FBFD] px-3 py-2" title={title}>
-      <p className="text-xs font-semibold uppercase tracking-[0.02em] text-[#5E6A78]">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[#1F2430]">{displayValue(value)}</p>
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2" title={title}>
+      <p className="text-xs font-semibold uppercase tracking-[0.02em] text-[color:var(--muted-foreground)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{displayValue(value)}</p>
     </div>
   );
 }
@@ -143,10 +143,10 @@ function FilterControls({
     <Card className="gap-4 p-0">
       <CardContent className="space-y-4 py-5">
         <div className="grid gap-3 md:grid-cols-[minmax(220px,1.4fr)_120px_160px_120px]">
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>Search</span>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6A7480]" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[color:var(--muted-foreground)]" />
               <Input
                 value={filters.search}
                 onChange={event => update("search", event.target.value)}
@@ -155,15 +155,15 @@ function FilterControls({
               />
             </div>
           </label>
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>State</span>
             <Input value={filters.state} onChange={event => update("state", event.target.value)} placeholder="CA" maxLength={2} />
           </label>
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>City</span>
             <Input value={filters.city} onChange={event => update("city", event.target.value)} placeholder="Los Angeles" />
           </label>
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>Limit</span>
             <Select value={filters.limit} onValueChange={value => update("limit", value)}>
               <SelectTrigger className="w-full">
@@ -179,20 +179,20 @@ function FilterControls({
         </div>
 
         <div className="grid gap-3 md:grid-cols-[120px_120px_140px_minmax(180px,1fr)_auto]">
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>Latitude</span>
             <Input value={filters.latitude} onChange={event => update("latitude", event.target.value)} inputMode="decimal" placeholder="34.05" />
           </label>
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>Longitude</span>
             <Input value={filters.longitude} onChange={event => update("longitude", event.target.value)} inputMode="decimal" placeholder="-118.24" />
           </label>
-          <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+          <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
             <span>Radius miles</span>
             <Input value={filters.radiusMiles} onChange={event => update("radiusMiles", event.target.value)} inputMode="decimal" placeholder="25" />
           </label>
           {tab === "dialysis" ? (
-            <label className="space-y-1 text-sm font-semibold text-[#1F2430]">
+            <label className="space-y-1 text-sm font-semibold text-[color:var(--foreground)]">
               <span>Modality</span>
               <Select value={filters.modality} onValueChange={value => update("modality", value)}>
                 <SelectTrigger className="w-full">
@@ -223,8 +223,8 @@ function FilterControls({
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <Card className="border-dashed bg-[#F8FBFD]">
-      <CardContent className="py-8 text-center text-sm font-medium text-[#4F5E70]">
+    <Card className="border-dashed bg-[var(--background)]">
+      <CardContent className="py-8 text-center text-sm font-medium text-[color:var(--muted-foreground)]">
         No {label} matched the current filters.
       </CardContent>
     </Card>
@@ -245,8 +245,8 @@ function TransplantCard({
       <CardHeader className="gap-3 px-5 pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base text-[#1F2430]">{program.name}</CardTitle>
-            <p className="mt-1 flex items-center gap-1 text-sm text-[#4F5E70]">
+            <CardTitle className="text-base text-[color:var(--foreground)]">{program.name}</CardTitle>
+            <p className="mt-1 flex items-center gap-1 text-sm text-[color:var(--muted-foreground)]">
               <MapPin className="size-4" />
               {locationText(program)}
               {program.distanceMiles !== undefined && <span>· {program.distanceMiles} miles</span>}
@@ -271,7 +271,7 @@ function TransplantCard({
           />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-medium text-[#4F5E70]">SRTR release date: {displayValue(program.releaseDate)}</p>
+          <p className="text-sm font-medium text-[color:var(--muted-foreground)]">SRTR release date: {displayValue(program.releaseDate)}</p>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
               <a href={program.srtrReportUrl} target="_blank" rel="noreferrer">
@@ -307,8 +307,8 @@ function DialysisCard({
       <CardHeader className="gap-3 px-5 pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base text-[#1F2430]">{facility.name}</CardTitle>
-            <p className="mt-1 text-sm text-[#4F5E70]">{addressText(facility)}</p>
+            <CardTitle className="text-base text-[color:var(--foreground)]">{facility.name}</CardTitle>
+            <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{addressText(facility)}</p>
           </div>
           <Badge variant="info">CMS dialysis facility data</Badge>
         </div>
@@ -372,7 +372,7 @@ function FhirDialog({
             Copy JSON
           </Button>
         </div>
-        <pre className="max-h-[55vh] overflow-auto rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-4 text-xs leading-relaxed text-[#1F2430]">
+        <pre className="max-h-[55vh] overflow-auto rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 text-xs leading-relaxed text-[color:var(--foreground)]">
           {json || "Loading..."}
         </pre>
       </DialogContent>
@@ -417,7 +417,7 @@ function ReferralDialog({
             Copy JSON
           </Button>
         </div>
-        <pre className="max-h-[55vh] overflow-auto rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-4 text-xs leading-relaxed text-[#1F2430]">
+        <pre className="max-h-[55vh] overflow-auto rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 text-xs leading-relaxed text-[color:var(--foreground)]">
           {json || "No preview selected."}
         </pre>
       </DialogContent>
@@ -496,9 +496,9 @@ export function KidneyServicesPage() {
       subtitle="Find and compare kidney transplant programs and dialysis facilities using curated SRTR and CMS data."
     >
       <div className="space-y-5">
-        <Alert className="border-[#C5E3F5] bg-[#F4FAFE]">
+        <Alert className="border-[var(--info-border)] bg-[var(--blue-panel)]">
           <Building2 className="size-4" />
-          <AlertDescription className="text-sm font-medium text-[#334155]">
+          <AlertDescription className="text-sm font-medium text-[color:var(--foreground)]">
             Directory and program metrics support referral discussions. They do not guarantee program acceptance, treatment availability,
             transplant eligibility, organ availability, transplantation, or dialysis placement.
           </AlertDescription>
@@ -512,7 +512,7 @@ export function KidneyServicesPage() {
 
           <FilterControls filters={filters} tab={tab} onChange={setFilters} onRefresh={() => setRefreshKey(key => key + 1)} />
 
-          <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[#4F5E70]">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--muted-foreground)]">
             <Badge variant={tab === "transplant" ? "purple" : "info"}>{displayValue(activeTotal)} matched</Badge>
             <span>Showing at most {filters.limit} records.</span>
           </div>
@@ -520,7 +520,7 @@ export function KidneyServicesPage() {
           {loading && (
             <div className="space-y-3">
               {[0, 1, 2].map(index => (
-                <div key={index} className="h-40 animate-pulse rounded-lg bg-[#E7F1F8]" />
+                <div key={index} className="h-40 animate-pulse rounded-lg bg-[var(--info-bg)]" />
               ))}
             </div>
           )}

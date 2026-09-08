@@ -39,23 +39,23 @@ function displayDate(value?: string, includeTime = false): string {
 }
 
 function EvidenceList({ items, emptyText }: { items: SleEvidenceItem[]; emptyText: string }) {
-  if (items.length === 0) return <p className="text-sm text-[#5B6878]">{emptyText}</p>;
+  if (items.length === 0) return <p className="text-sm text-[color:var(--muted-foreground)]">{emptyText}</p>;
   return (
-    <ul className="divide-y divide-[#E6ECF2]">
+    <ul className="divide-y divide-[var(--border)]">
       {items.slice(0, 10).map(item => (
         <li key={item.id} className="py-3 first:pt-0 last:pb-0">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#1F2430]">{item.title}</p>
-              {item.detail && <p className="mt-1 text-xs leading-5 text-[#5B6878]">{item.detail}</p>}
+              <p className="text-sm font-semibold text-[color:var(--foreground)]">{item.title}</p>
+              {item.detail && <p className="mt-1 text-xs leading-5 text-[color:var(--muted-foreground)]">{item.detail}</p>}
             </div>
             <Badge variant="neutral">{item.resourceType}</Badge>
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#697586]">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[color:var(--muted-foreground)]">
             <span>{displayDate(item.date)}</span>
             <span>{item.source}</span>
             {item.resourceReference && (
-              <a href={`/fhir/${item.resourceReference}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#3F1D63] underline decoration-[#78B7E3] underline-offset-2">
+              <a href={`/fhir/${item.resourceReference}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[color:var(--brand)] underline decoration-[var(--sky-blue)] underline-offset-2">
                 Review evidence <ExternalLink className="size-3" aria-hidden="true" />
               </a>
             )}
@@ -69,7 +69,7 @@ function EvidenceList({ items, emptyText }: { items: SleEvidenceItem[]; emptyTex
 function SystemsSummary({ systems, selected, onSelect }: { systems: SleSystemReview[]; selected: SleSystemId; onSelect: (id: SleSystemId) => void }) {
   return (
     <Card className="gap-0 p-0">
-      <CardHeader className="border-b border-[#E6ECF2] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="size-4 text-[#65408A]" aria-hidden="true" />Systems summary</CardTitle></CardHeader>
+      <CardHeader className="border-b border-[var(--border)] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="size-4 text-[color:var(--primary)]" aria-hidden="true" />Systems summary</CardTitle></CardHeader>
       <CardContent className="p-2">
         <ul className="space-y-1">
           {systems.map(system => (
@@ -78,10 +78,10 @@ function SystemsSummary({ systems, selected, onSelect }: { systems: SleSystemRev
                 type="button"
                 onClick={() => onSelect(system.id)}
                 aria-current={selected === system.id ? "true" : undefined}
-                className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left outline-none hover:bg-[#F3F9FD] focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/40 ${selected === system.id ? "bg-[#F3EFF7]" : ""}`}
+                className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left outline-none hover:bg-[var(--blue-panel)] focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/40 ${selected === system.id ? "bg-[var(--info-bg)]" : ""}`}
               >
-                <span className="text-sm font-semibold text-[#1F2430]">{system.title}</span>
-                <span className="text-right text-xs text-[#5B6878]">{system.reviewedCount}/{system.totalCount} reviewed</span>
+                <span className="text-sm font-semibold text-[color:var(--foreground)]">{system.title}</span>
+                <span className="text-right text-xs text-[color:var(--muted-foreground)]">{system.reviewedCount}/{system.totalCount} reviewed</span>
               </button>
             </li>
           ))}
@@ -94,11 +94,11 @@ function SystemsSummary({ systems, selected, onSelect }: { systems: SleSystemRev
 function AssessmentCompletenessCard({ model }: { model: SleSystemsReviewModel }) {
   return (
     <Card className="gap-0 p-0">
-      <CardHeader className="border-b border-[#E6ECF2] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="size-4 text-[#245D86]" aria-hidden="true" />Assessment completeness</CardTitle></CardHeader>
+      <CardHeader className="border-b border-[var(--border)] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="size-4 text-[color:var(--link)]" aria-hidden="true" />Assessment completeness</CardTitle></CardHeader>
       <CardContent className="space-y-3 px-4 py-4">
-        <p className="text-2xl font-semibold text-[#1F2430]">{model.assessment.reviewed} <span className="text-sm font-medium text-[#5B6878]">of {model.assessment.total} reviewed</span></p>
-        <progress className="h-2 w-full accent-[#65408A]" value={model.assessment.reviewed} max={model.assessment.total} aria-label={model.assessment.label} />
-        <p className="text-sm text-[#5B6878]">{model.assessment.documented} of {model.assessment.total} elements have supporting documentation. Documentation does not equal clinician review.</p>
+        <p className="text-2xl font-semibold text-[color:var(--foreground)]">{model.assessment.reviewed} <span className="text-sm font-medium text-[color:var(--muted-foreground)]">of {model.assessment.total} reviewed</span></p>
+        <progress className="h-2 w-full accent-[var(--primary)]" value={model.assessment.reviewed} max={model.assessment.total} aria-label={model.assessment.label} />
+        <p className="text-sm text-[color:var(--muted-foreground)]">{model.assessment.documented} of {model.assessment.total} elements have supporting documentation. Documentation does not equal clinician review.</p>
       </CardContent>
     </Card>
   );
@@ -107,17 +107,17 @@ function AssessmentCompletenessCard({ model }: { model: SleSystemsReviewModel })
 function OutstandingReviewCard({ model, onSelect }: { model: SleSystemsReviewModel; onSelect: (id: SleSystemId) => void }) {
   return (
     <Card className="gap-0 p-0">
-      <CardHeader className="border-b border-[#E6ECF2] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><TriangleAlert className="size-4 text-[#9A6418]" aria-hidden="true" />Outstanding review</CardTitle></CardHeader>
+      <CardHeader className="border-b border-[var(--border)] px-4 py-4"><CardTitle className="flex items-center gap-2 text-base"><TriangleAlert className="size-4 text-[color:var(--warning-text)]" aria-hidden="true" />Outstanding review</CardTitle></CardHeader>
       <CardContent className="px-4 py-3">
         {model.outstandingReview.length === 0 ? (
-          <p className="flex items-center gap-2 text-sm text-[#2F6F47]"><CheckCircle2 className="size-4" aria-hidden="true" />No outstanding structured review items.</p>
+          <p className="flex items-center gap-2 text-sm text-[color:var(--success)]"><CheckCircle2 className="size-4" aria-hidden="true" />No outstanding structured review items.</p>
         ) : (
-          <ul className="divide-y divide-[#E6ECF2]">
+          <ul className="divide-y divide-[var(--border)]">
             {model.outstandingReview.slice(0, 6).map(item => (
               <li key={item.id}>
-                <button type="button" onClick={() => onSelect(item.systemId)} className="flex min-h-11 w-full items-center justify-between gap-3 py-2 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/40">
-                  <span><strong className="block text-sm text-[#1F2430]">{item.systemTitle}</strong><span className="text-xs text-[#5B6878]">{item.label}</span></span>
-                  <ArrowRight className="size-4 shrink-0 text-[#65408A]" aria-hidden="true" />
+                <button type="button" onClick={() => onSelect(item.systemId)} className="flex min-h-11 w-full items-center justify-between gap-3 py-2 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/40">
+                  <span><strong className="block text-sm text-[color:var(--foreground)]">{item.systemTitle}</strong><span className="text-xs text-[color:var(--muted-foreground)]">{item.label}</span></span>
+                  <ArrowRight className="size-4 shrink-0 text-[color:var(--primary)]" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -234,17 +234,17 @@ export function SleSystemsReviewPage() {
   return (
     <AppShell title="SLE Systems Review" subtitle="Organ-specific lupus assessment, historical involvement, and assessment completeness">
       <div className="space-y-5">
-        <section className="flex flex-wrap items-end justify-between gap-4 border-b border-[#DCE6F0] pb-5" aria-labelledby="review-context-heading">
+        <section className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-5" aria-labelledby="review-context-heading">
           <div>
-            <p className="text-xs font-semibold uppercase text-[#65408A]">Structured SLE Systems Review</p>
-            <h2 id="review-context-heading" className="mt-1 text-xl font-semibold text-[#1F2430]">Patient review context</h2>
-            <p className="mt-1 text-sm text-[#5B6878]">Systematic assessment support only. No official BILAG grade, risk percentage, or predicted severity is calculated.</p>
+            <p className="text-xs font-semibold uppercase text-[color:var(--primary)]">Structured SLE Systems Review</p>
+            <h2 id="review-context-heading" className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">Patient review context</h2>
+            <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">Systematic assessment support only. No official BILAG grade, risk percentage, or predicted severity is calculated.</p>
           </div>
           <div className="flex min-w-[260px] flex-col gap-1.5">
-            <label htmlFor="sle-patient-select" className="text-sm font-semibold text-[#344253]">Patient</label>
+            <label htmlFor="sle-patient-select" className="text-sm font-semibold text-[color:var(--foreground)]">Patient</label>
             <select
               id="sle-patient-select"
-              className="min-h-11 rounded-lg border border-[#BFCFDC] bg-white px-3 text-sm text-[#1F2430] outline-none focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/40"
+              className="min-h-11 rounded-lg border border-[var(--input)] bg-white px-3 text-sm text-[color:var(--foreground)] outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/40"
               value={patientId}
               disabled={loadingPatients}
               onChange={event => setSearchParams({ patientId: event.target.value })}
@@ -257,13 +257,13 @@ export function SleSystemsReviewPage() {
         </section>
 
         {error && <Alert variant="destructive"><AlertTriangle aria-hidden="true" /><AlertDescription className="flex flex-wrap items-center justify-between gap-3"><span>{error}</span><Button variant="outline" size="sm" onClick={loadReview}><RefreshCw aria-hidden="true" />Try again</Button></AlertDescription></Alert>}
-        {loading && <div role="status" aria-live="polite" className="rounded-lg border border-[#DCE6F0] bg-white p-6 text-sm text-[#4F5E70]">Loading patient-specific SLE systems evidence...</div>}
+        {loading && <div role="status" aria-live="polite" className="rounded-lg border border-[var(--border)] bg-white p-6 text-sm text-[color:var(--muted-foreground)]">Loading patient-specific SLE systems evidence...</div>}
 
         {model && !loading && (
           <>
-            <section className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-[#DCE6F0] bg-white px-5 py-4" aria-label="Selected patient">
-              <div><h2 className="text-lg font-semibold text-[#1F2430]">{model.patient.name}</h2><p className="mt-1 text-sm text-[#5B6878]">{model.patient.primaryDiagnosis ?? "No lupus diagnosis label was available in the retrieved Conditions."}</p></div>
-              <div className="text-sm text-[#5B6878]"><p><strong className="text-[#344253]">Patient identifier:</strong> {model.patient.identifier ?? "Not available"}</p><p className="mt-1"><strong className="text-[#344253]">Review generated:</strong> {displayDate(model.generatedAt, true)}</p></div>
+            <section className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-[var(--border)] bg-white px-5 py-4" aria-label="Selected patient">
+              <div><h2 className="text-lg font-semibold text-[color:var(--foreground)]">{model.patient.name}</h2><p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{model.patient.primaryDiagnosis ?? "No lupus diagnosis label was available in the retrieved Conditions."}</p></div>
+              <div className="text-sm text-[color:var(--muted-foreground)]"><p><strong className="text-[color:var(--foreground)]">Patient identifier:</strong> {model.patient.identifier ?? "Not available"}</p><p className="mt-1"><strong className="text-[color:var(--foreground)]">Review generated:</strong> {displayDate(model.generatedAt, true)}</p></div>
             </section>
             {!model.dataStatus.complete && <Alert variant="warning"><TriangleAlert aria-hidden="true" /><AlertDescription>Some FHIR resource groups could not be retrieved: {model.dataStatus.failedSections.join(", ")}. Missing data are shown as incomplete, not as no concern.</AlertDescription></Alert>}
 
@@ -277,38 +277,38 @@ export function SleSystemsReviewPage() {
             </div>
 
             {selectedSystem && (
-              <section id="selected-organ-detail" className="space-y-5 border-t border-[#CCDCE9] pt-6" aria-labelledby="selected-system-heading">
-                <div className={`rounded-lg border bg-white px-5 py-5 ${selectedSystem.permanentDamageDocumented ? "sle-damage-border" : "border-[#DCE6F0]"}`}>
+              <section id="selected-organ-detail" className="space-y-5 border-t border-[var(--input)] pt-6" aria-labelledby="selected-system-heading">
+                <div className={`rounded-lg border bg-white px-5 py-5 ${selectedSystem.permanentDamageDocumented ? "sle-damage-border" : "border-[var(--border)]"}`}>
                   <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0"><p className="text-xs font-semibold uppercase text-[#65408A]">Selected organ detail</p><h2 id="selected-system-heading" className="mt-1 text-xl font-semibold text-[#1F2430]">{selectedSystem.title}</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[#5B6878]">{selectedSystem.description}</p></div>
+                    <div className="min-w-0"><p className="text-xs font-semibold uppercase text-[color:var(--primary)]">Selected organ detail</p><h2 id="selected-system-heading" className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">{selectedSystem.title}</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[color:var(--muted-foreground)]">{selectedSystem.description}</p></div>
                     <SystemStatusBadge status={selectedSystem.status} label={selectedSystem.statusLabel} />
                   </div>
-                  <p className="mt-3 text-sm text-[#344253]">{selectedSystem.statusDetail}</p>
-                  <dl className="mt-4 grid gap-3 border-t border-[#E6ECF2] pt-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div><dt className="text-xs font-semibold uppercase text-[#697586]">Assessment</dt><dd className="mt-1 text-sm font-semibold text-[#1F2430]">{selectedSystem.completenessLabel}</dd></div>
-                    <div><dt className="text-xs font-semibold uppercase text-[#697586]">Evidence</dt><dd className="mt-1 text-sm font-semibold text-[#1F2430]">{selectedSystem.evidenceCompletionLabel}</dd></div>
-                    <div><dt className="text-xs font-semibold uppercase text-[#697586]">Historical involvement</dt><dd className="mt-1 text-sm font-semibold text-[#1F2430]">{selectedSystem.historicalEvidence.length > 0 ? `${selectedSystem.historicalEvidence.length} item${selectedSystem.historicalEvidence.length === 1 ? "" : "s"}` : "None documented"}</dd></div>
-                    <div><dt className="text-xs font-semibold uppercase text-[#697586]">Last updated</dt><dd className="mt-1 text-sm font-semibold text-[#1F2430]">{displayDate(selectedSystem.lastUpdated)}</dd></div>
+                  <p className="mt-3 text-sm text-[color:var(--foreground)]">{selectedSystem.statusDetail}</p>
+                  <dl className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div><dt className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Assessment</dt><dd className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{selectedSystem.completenessLabel}</dd></div>
+                    <div><dt className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Evidence</dt><dd className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{selectedSystem.evidenceCompletionLabel}</dd></div>
+                    <div><dt className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Historical involvement</dt><dd className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{selectedSystem.historicalEvidence.length > 0 ? `${selectedSystem.historicalEvidence.length} item${selectedSystem.historicalEvidence.length === 1 ? "" : "s"}` : "None documented"}</dd></div>
+                    <div><dt className="text-xs font-semibold uppercase text-[color:var(--muted-foreground)]">Last updated</dt><dd className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">{displayDate(selectedSystem.lastUpdated)}</dd></div>
                   </dl>
-                  {selectedSystem.permanentDamageDocumented && <p className="mt-3 text-sm font-semibold text-[#5B3A72]">Chronic or permanent damage is explicitly documented in the available evidence.</p>}
+                  {selectedSystem.permanentDamageDocumented && <p className="mt-3 text-sm font-semibold text-[color:var(--brand)]">Chronic or permanent damage is explicitly documented in the available evidence.</p>}
                 </div>
 
                 <div className="grid gap-5 lg:grid-cols-2">
-                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[#E6ECF2] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><Activity className="size-4 text-[#65408A]" aria-hidden="true" />Current evidence</CardTitle></CardHeader><CardContent className="px-5 py-4"><EvidenceList items={selectedSystem.currentEvidence} emptyText="No current system-specific evidence is available." /></CardContent></Card>
-                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[#E6ECF2] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-[#245D86]" aria-hidden="true" />Historical involvement</CardTitle></CardHeader><CardContent className="px-5 py-4"><EvidenceList items={selectedSystem.historicalEvidence} emptyText="No historical system-specific evidence is available." /></CardContent></Card>
+                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[var(--border)] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><Activity className="size-4 text-[color:var(--primary)]" aria-hidden="true" />Current evidence</CardTitle></CardHeader><CardContent className="px-5 py-4"><EvidenceList items={selectedSystem.currentEvidence} emptyText="No current system-specific evidence is available." /></CardContent></Card>
+                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[var(--border)] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-[color:var(--link)]" aria-hidden="true" />Historical involvement</CardTitle></CardHeader><CardContent className="px-5 py-4"><EvidenceList items={selectedSystem.historicalEvidence} emptyText="No historical system-specific evidence is available." /></CardContent></Card>
                 </div>
 
                 {selectedSystem.pendingNoteConcepts.length > 0 && (
-                  <Card className="gap-0 border-[#E4DAEC] p-0"><CardHeader className="border-b border-[#E4DAEC] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><FileSearch className="size-4 text-[#65408A]" aria-hidden="true" />Notes & Coding concepts awaiting review</CardTitle></CardHeader><CardContent className="space-y-3 px-5 py-4">
+                  <Card className="gap-0 border-[var(--info-border)] p-0"><CardHeader className="border-b border-[var(--info-border)] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><FileSearch className="size-4 text-[color:var(--primary)]" aria-hidden="true" />Notes & Coding concepts awaiting review</CardTitle></CardHeader><CardContent className="space-y-3 px-5 py-4">
                     {selectedSystem.pendingNoteConcepts.map(concept => (
-                      <div key={concept.id} className="rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-semibold text-[#1F2430]">{concept.label}</p><p className="mt-1 text-sm text-[#5B6878]">Source phrase: “{concept.sourceText}”</p><p className="mt-1 text-xs text-[#697586]">{displayDate(concept.noteDate)} · {concept.certainty}</p></div><Badge variant="warning">Awaiting clinician review</Badge></div>
+                      <div key={concept.id} className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-semibold text-[color:var(--foreground)]">{concept.label}</p><p className="mt-1 text-sm text-[color:var(--muted-foreground)]">Source phrase: “{concept.sourceText}”</p><p className="mt-1 text-xs text-[color:var(--muted-foreground)]">{displayDate(concept.noteDate)} · {concept.certainty}</p></div><Badge variant="warning">Awaiting clinician review</Badge></div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Button size="sm" onClick={() => decideNote(concept.draftId, concept.conceptId, "approve", concept.validatedCandidateId)} disabled={!concept.validatedCandidateId || busyAction === `approve-${concept.conceptId}`}><CheckCircle2 aria-hidden="true" />Approve finding</Button>
                           <Button size="sm" variant="outline" onClick={() => decideNote(concept.draftId, concept.conceptId, "reject")} disabled={busyAction === `reject-${concept.conceptId}`}>Reject</Button>
                           <Button asChild size="sm" variant="link"><Link to={`/patients/${model.patient.id}/notes-coding`}><ExternalLink aria-hidden="true" />Open Notes & Coding</Link></Button>
                         </div>
-                        {!concept.validatedCandidateId && <p className="mt-2 text-xs text-[#8A641F]">Approval requires a validated terminology candidate. Open Notes & Coding to review terminology.</p>}
+                        {!concept.validatedCandidateId && <p className="mt-2 text-xs text-[color:var(--warning-text)]">Approval requires a validated terminology candidate. Open Notes & Coding to review terminology.</p>}
                       </div>
                     ))}
                   </CardContent></Card>
@@ -317,26 +317,26 @@ export function SleSystemsReviewPage() {
                 <CoordinationTimeline events={timelineEvents} title="FHIR evidence timeline" emptyText="No dated evidence is available for this system." showResourceLinks />
 
                 <div className="grid gap-5 lg:grid-cols-2">
-                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[#E6ECF2] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><SearchCheck className="size-4 text-[#9A6418]" aria-hidden="true" />Missing assessment checklist</CardTitle></CardHeader><CardContent className="px-5 py-4">
+                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[var(--border)] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><SearchCheck className="size-4 text-[color:var(--warning-text)]" aria-hidden="true" />Missing assessment checklist</CardTitle></CardHeader><CardContent className="px-5 py-4">
                     <ul className="space-y-2">
                       {selectedSystem.checklist.map(item => (
-                        <li key={item.id} className="flex min-h-10 items-center gap-2 text-sm text-[#344253]">
-                          {item.state === "reviewed" ? <CheckCircle2 className="size-4 shrink-0 text-[#2F7A4C]" aria-hidden="true" /> : <TriangleAlert className="size-4 shrink-0 text-[#9A6418]" aria-hidden="true" />}
+                        <li key={item.id} className="flex min-h-10 items-center gap-2 text-sm text-[color:var(--foreground)]">
+                          {item.state === "reviewed" ? <CheckCircle2 className="size-4 shrink-0 text-[color:var(--success)]" aria-hidden="true" /> : <TriangleAlert className="size-4 shrink-0 text-[color:var(--warning-text)]" aria-hidden="true" />}
                           <span>{item.label}</span>
                           <Badge variant={item.state === "reviewed" ? "success" : item.state === "documented" ? "info" : "warning"} className="ml-auto">{item.state === "reviewed" ? "Reviewed" : item.state === "documented" ? "Documented, not reviewed" : "Missing"}</Badge>
                         </li>
                       ))}
                     </ul>
                   </CardContent></Card>
-                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[#E6ECF2] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><ClipboardPlus className="size-4 text-[#65408A]" aria-hidden="true" />Recommended next actions</CardTitle></CardHeader><CardContent className="space-y-4 px-5 py-4">
-                    <ul className="space-y-2">{selectedSystem.nextActions.map(action => <li key={action} className="flex gap-2 text-sm text-[#344253]"><ArrowRight className="mt-0.5 size-4 shrink-0 text-[#65408A]" aria-hidden="true" />{action}</li>)}</ul>
-                    <div className="flex flex-wrap gap-2 border-t border-[#E6ECF2] pt-4">
+                  <Card className="gap-0 p-0"><CardHeader className="border-b border-[var(--border)] px-5 py-4"><CardTitle className="flex items-center gap-2 text-base"><ClipboardPlus className="size-4 text-[color:var(--primary)]" aria-hidden="true" />Recommended next actions</CardTitle></CardHeader><CardContent className="space-y-4 px-5 py-4">
+                    <ul className="space-y-2">{selectedSystem.nextActions.map(action => <li key={action} className="flex gap-2 text-sm text-[color:var(--foreground)]"><ArrowRight className="mt-0.5 size-4 shrink-0 text-[color:var(--primary)]" aria-hidden="true" />{action}</li>)}</ul>
+                    <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
                       <Button type="button" onClick={() => setAssessmentOpen(true)}><ClipboardCheck aria-hidden="true" />Complete assessment</Button>
                       <Button type="button" variant="outline" onClick={createTask} disabled={busyAction === "task"}><ClipboardPlus aria-hidden="true" />{busyAction === "task" ? "Creating..." : "Create follow-up Task"}</Button>
                       {selectedSystem.id === "renal" && <Button asChild variant="outline"><Link to={`/patients/${model.patient.id}/renal-timeline`}><Activity aria-hidden="true" />Open Renal Timeline</Link></Button>}
                       <Button asChild variant="outline"><Link to={`/patients/${model.patient.id}/care-coordination`}><Stethoscope aria-hidden="true" />Care Coordination</Link></Button>
                     </div>
-                    <p className="text-xs leading-5 text-[#697586]">Actions open a review workflow or create a Task. This page never places a laboratory, medication, referral, or treatment order automatically.</p>
+                    <p className="text-xs leading-5 text-[color:var(--muted-foreground)]">Actions open a review workflow or create a Task. This page never places a laboratory, medication, referral, or treatment order automatically.</p>
                   </CardContent></Card>
                 </div>
                 <SleAssessmentDialog open={assessmentOpen} onOpenChange={setAssessmentOpen} system={selectedSystem} onSubmit={saveAssessment} />

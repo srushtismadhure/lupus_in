@@ -179,10 +179,10 @@ export function MedicationManagementPage() {
         <MedicationSafetyTimeline observations={observations} events={timelineEvents} />
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#DCE6F0] bg-white p-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-white p-4">
         <div>
-          <p className="text-sm font-semibold text-[#1F2430]">Patient-reported symptoms and medication experience</p>
-          <p className="text-xs text-[#4F5E70]">
+          <p className="text-sm font-semibold text-[color:var(--foreground)]">Patient-reported symptoms and medication experience</p>
+          <p className="text-xs text-[color:var(--muted-foreground)]">
             {medicationState.assessments.length === 0 ? "No repeated symptom assessments are available." : `${medicationState.assessments.length} assessment(s) recorded.`}
           </p>
         </div>

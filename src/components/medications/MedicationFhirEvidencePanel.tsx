@@ -57,13 +57,13 @@ export function MedicationFhirEvidencePanel({
                 {resourceType} · {count}
               </Badge>
             ))}
-            {rows.length === 0 && <span className="text-sm text-[#4F5E70]">No medication-related resources found.</span>}
+            {rows.length === 0 && <span className="text-sm text-[color:var(--muted-foreground)]">No medication-related resources found.</span>}
           </div>
           {rows.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded-md border border-[#E3EAF2]">
+            <div className="max-h-64 overflow-y-auto rounded-md border border-[var(--border)]">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E3EAF2] text-[#4F5E70]">
+                  <tr className="border-b border-[var(--border)] text-[color:var(--muted-foreground)]">
                     <th className="px-3 py-2 font-medium">Resource</th>
                     <th className="px-3 py-2 font-medium">ID</th>
                     <th className="px-3 py-2 font-medium">Code</th>
@@ -72,7 +72,7 @@ export function MedicationFhirEvidencePanel({
                 </thead>
                 <tbody>
                   {rows.map((row, index) => (
-                    <tr key={`${row.resourceType}-${row.id ?? index}`} className="border-b border-[#E3EAF2] last:border-0">
+                    <tr key={`${row.resourceType}-${row.id ?? index}`} className="border-b border-[var(--border)] last:border-0">
                       <td className="px-3 py-1.5">{row.resourceType}</td>
                       <td className="px-3 py-1.5 font-mono">{row.id ?? "—"}</td>
                       <td className="px-3 py-1.5">{row.code ?? "—"}</td>

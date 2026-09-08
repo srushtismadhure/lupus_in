@@ -8,7 +8,7 @@ export function OverviewPage() {
 
   return (
     <AppShell title="Overview" subtitle="Patient-specific clinical overview">
-      <Card className="border-dashed bg-[#F3F9FD]">
+      <Card className="border-dashed bg-[var(--blue-panel)]">
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center text-sm text-muted-foreground">
           <p>Select a patient from Patients to view their clinical overview.</p>
           <Button size="sm" onClick={() => navigate("/patients")}>

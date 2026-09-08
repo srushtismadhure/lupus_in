@@ -93,9 +93,9 @@ export function ClinicianReviewDialog({
         </DialogHeader>
         {pathway && (
           <div className="space-y-5">
-            <section aria-labelledby="referral-reason-heading" className="rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-4">
-              <h3 id="referral-reason-heading" className="font-semibold text-[#1F2430]">{pathway.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#4F5E70]">{pathway.reason}</p>
+            <section aria-labelledby="referral-reason-heading" className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-4">
+              <h3 id="referral-reason-heading" className="font-semibold text-[color:var(--foreground)]">{pathway.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--muted-foreground)]">{pathway.reason}</p>
               <div className="mt-3"><PathwayEvidence evidence={pathway.evidence} ruleId={pathway.sourceRuleId} ruleVersion={pathway.ruleVersion} /></div>
             </section>
 
@@ -133,28 +133,28 @@ export function ClinicianReviewDialog({
                 Generate referral preview
               </Button>
             ) : (
-              <section aria-labelledby="fhir-preview-heading" className="rounded-lg border border-[#B7D9EF] bg-[#F3F9FD] p-4">
-                <h3 id="fhir-preview-heading" className="flex items-center gap-2 font-semibold text-[#1F2430]"><CheckCircle2 className="size-4 text-[#2F7A4C]" aria-hidden="true" /> Draft resources ready</h3>
+              <section aria-labelledby="fhir-preview-heading" className="rounded-lg border border-[var(--info-border)] bg-[var(--blue-panel)] p-4">
+                <h3 id="fhir-preview-heading" className="flex items-center gap-2 font-semibold text-[color:var(--foreground)]"><CheckCircle2 className="size-4 text-[color:var(--success)]" aria-hidden="true" /> Draft resources ready</h3>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                  <div><dt className="text-[#4F5E70]">ServiceRequest</dt><dd className="font-semibold">{preview.serviceRequest.status} · {preview.serviceRequest.intent}</dd></div>
-                  <div><dt className="text-[#4F5E70]">Task</dt><dd className="font-semibold">{preview.task.status} · {preview.task.owner?.display ?? "Unassigned"}</dd></div>
-                  <div><dt className="text-[#4F5E70]">CarePlan</dt><dd className="font-semibold">{preview.carePlan.status}</dd></div>
-                  <div><dt className="text-[#4F5E70]">CareTeam</dt><dd className="font-semibold">{preview.careTeam.status}</dd></div>
+                  <div><dt className="text-[color:var(--muted-foreground)]">ServiceRequest</dt><dd className="font-semibold">{preview.serviceRequest.status} · {preview.serviceRequest.intent}</dd></div>
+                  <div><dt className="text-[color:var(--muted-foreground)]">Task</dt><dd className="font-semibold">{preview.task.status} · {preview.task.owner?.display ?? "Unassigned"}</dd></div>
+                  <div><dt className="text-[color:var(--muted-foreground)]">CarePlan</dt><dd className="font-semibold">{preview.carePlan.status}</dd></div>
+                  <div><dt className="text-[color:var(--muted-foreground)]">CareTeam</dt><dd className="font-semibold">{preview.careTeam.status}</dd></div>
                 </dl>
-                <details className="mt-3 text-xs text-[#4F5E70]">
-                  <summary className="min-h-9 cursor-pointer font-semibold text-[#3F1D63]">FHIR transaction details</summary>
+                <details className="mt-3 text-xs text-[color:var(--muted-foreground)]">
+                  <summary className="min-h-9 cursor-pointer font-semibold text-[color:var(--brand)]">FHIR transaction details</summary>
                   <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-white p-3">{JSON.stringify(preview.transaction, null, 2)}</pre>
                 </details>
               </section>
             )}
 
             {preview && user?.role === "clinician" && (
-              <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[#DCE6F0] p-3 text-sm font-medium text-[#1F2430]">
-                <input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} className="mt-0.5 size-5 accent-[#43205F]" />
+              <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[var(--border)] p-3 text-sm font-medium text-[color:var(--foreground)]">
+                <input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} className="mt-0.5 size-5 accent-[var(--primary)]" />
                 I reviewed the clinical evidence, destination, owner, and draft resources and authorize this referral order.
               </label>
             )}
-            {preview && user?.role !== "clinician" && <p className="rounded-lg bg-[#FFF4DD] p-3 text-sm font-medium text-[#805110]">Only an authorized clinician can submit this referral.</p>}
+            {preview && user?.role !== "clinician" && <p className="rounded-lg bg-[var(--warning-bg)] p-3 text-sm font-medium text-[color:var(--warning-text)]">Only an authorized clinician can submit this referral.</p>}
             {error && <p role="alert" className="rounded-lg bg-[#FCEBED] p-3 text-sm font-medium text-[#8B2D3B]">{error}</p>}
           </div>
         )}

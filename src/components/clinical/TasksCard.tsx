@@ -10,7 +10,7 @@ export function TasksCard({ tasks }: { tasks: fhir4.Task[] }) {
         {tasks.length === 0 && <p className="text-sm text-muted-foreground">No care tasks available.</p>}
         <ul className="space-y-2">
           {tasks.map(task => (
-            <li key={task.id} className="border-b border-[#E4E7EC] pb-2 last:border-0">
+            <li key={task.id} className="border-b border-[var(--border)] pb-2 last:border-0">
               <p className="text-sm font-medium text-foreground">{task.description ?? "Task"}</p>
               <p className="text-xs text-muted-foreground">
                 {task.status} / {task.priority ?? "unspecified priority"}

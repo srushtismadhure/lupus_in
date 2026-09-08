@@ -41,9 +41,9 @@ export function MedicationRegimenCard({ item, canManageOrders, onHold, onStop, o
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-sm font-semibold text-[#1F2430]">{item.medicationText}</p>
+            <p className="text-sm font-semibold text-[color:var(--foreground)]">{item.medicationText}</p>
             {item.medicationCode && (
-              <p className="font-mono text-xs text-[#4F5E70]">
+              <p className="font-mono text-xs text-[color:var(--muted-foreground)]">
                 {item.medicationSystem ?? "code"}: {item.medicationCode}
               </p>
             )}
@@ -51,58 +51,58 @@ export function MedicationRegimenCard({ item, canManageOrders, onHold, onStop, o
           {statusBadge(item.status)}
         </div>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#4F5E70] sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[color:var(--muted-foreground)] sm:grid-cols-3">
           <div>
-            <dt className="font-medium text-[#1F2430]">Dose</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Dose</dt>
             <dd>{item.dose ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Route</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Route</dt>
             <dd>{item.route ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Frequency</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Frequency</dt>
             <dd>{item.frequency ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Indication</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Indication</dt>
             <dd>{item.indication ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Started</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Started</dt>
             <dd>{item.startDate ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Expected end</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Expected end</dt>
             <dd>{item.expectedEndDate ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Ordered by</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Ordered by</dt>
             <dd>{item.orderingClinician ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Treatment phase</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Treatment phase</dt>
             <dd>{item.treatmentPhase ?? "Not available"}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#1F2430]">Last reconciliation</dt>
+            <dt className="font-medium text-[color:var(--foreground)]">Last reconciliation</dt>
             <dd>{item.lastReconciliationDate ?? "Not available"}</dd>
           </div>
         </dl>
 
-        <div className="rounded-md bg-[#F8FAFD] px-3 py-2 text-xs">
-          <p className="font-medium text-[#1F2430]">Patient-reported use</p>
-          <p className="text-[#4F5E70]">
+        <div className="rounded-md bg-[var(--background)] px-3 py-2 text-xs">
+          <p className="font-medium text-[color:var(--foreground)]">Patient-reported use</p>
+          <p className="text-[color:var(--muted-foreground)]">
             {item.patientReportedUseText ? `${item.patientReportedUseText}${item.patientReportedUseDate ? ` (${item.patientReportedUseDate})` : ""}` : "No patient-reported medication history is available."}
           </p>
         </div>
 
         {item.monitoring.length > 0 && (
           <div>
-            <p className="mb-1 text-xs font-medium text-[#1F2430]">Monitoring</p>
+            <p className="mb-1 text-xs font-medium text-[color:var(--foreground)]">Monitoring</p>
             <div className="flex flex-wrap gap-2">
               {item.monitoring.map(m => (
-                <span key={m.label} className="inline-flex items-center gap-1.5 text-xs text-[#4F5E70]">
+                <span key={m.label} className="inline-flex items-center gap-1.5 text-xs text-[color:var(--muted-foreground)]">
                   {m.label}: {monitoringBadge(m.status)}
                 </span>
               ))}
@@ -110,9 +110,9 @@ export function MedicationRegimenCard({ item, canManageOrders, onHold, onStop, o
           </div>
         )}
 
-        {item.note && <p className="text-xs text-[#4F5E70]">Note: {item.note}</p>}
+        {item.note && <p className="text-xs text-[color:var(--muted-foreground)]">Note: {item.note}</p>}
 
-        <div className="flex flex-wrap gap-2 border-t border-[#E3EAF2] pt-3">
+        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
           <Button size="sm" variant="outline" onClick={onViewEvidence}>
             View order
           </Button>

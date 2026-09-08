@@ -51,24 +51,24 @@ export function SleAssessmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="sle-assessment-description">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><ClipboardCheck className="size-5 text-[#65408A]" aria-hidden="true" />Complete {system.title} assessment</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><ClipboardCheck className="size-5 text-[color:var(--primary)]" aria-hidden="true" />Complete {system.title} assessment</DialogTitle>
           <DialogDescription id="sle-assessment-description">Mark only the items reviewed during this assessment. Unanswered items remain visible for a later visit.</DialogDescription>
         </DialogHeader>
         {available.length === 0 ? (
-          <p className="rounded-lg border border-[#BFDCC9] bg-[#EAF5EE] p-4 text-sm text-[#2F6F47]">All structured items for this system are already marked as reviewed.</p>
+          <p className="rounded-lg border border-[var(--mint)] bg-[var(--success-bg)] p-4 text-sm text-[color:var(--success)]">All structured items for this system are already marked as reviewed.</p>
         ) : (
           <fieldset className="space-y-2">
-            <legend className="text-sm font-semibold text-[#1F2430]">Items reviewed today</legend>
+            <legend className="text-sm font-semibold text-[color:var(--foreground)]">Items reviewed today</legend>
             {available.map(item => (
-              <Label key={item.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[#DCE6F0] px-3 py-2 text-sm hover:bg-[#F3F9FD]">
+              <Label key={item.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--blue-panel)]">
                 <input
                   type="checkbox"
-                  className="size-5 accent-[#43205F]"
+                  className="size-5 accent-[var(--primary)]"
                   checked={selected.includes(item.id)}
                   onChange={event => setSelected(current => event.target.checked ? [...current, item.id] : current.filter(id => id !== item.id))}
                 />
                 <span>{item.label}</span>
-                <span className="ml-auto text-xs font-normal text-[#697586]">{item.state === "documented" ? "Evidence documented" : "Evidence missing"}</span>
+                <span className="ml-auto text-xs font-normal text-[color:var(--muted-foreground)]">{item.state === "documented" ? "Evidence documented" : "Evidence missing"}</span>
               </Label>
             ))}
           </fieldset>

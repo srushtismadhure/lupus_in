@@ -13,8 +13,8 @@ const INDICATOR_BADGE: Record<RenalCdsCardData["indicator"], { label: string; va
 
 const INDICATOR_BORDER: Record<RenalCdsCardData["indicator"], string> = {
   critical: "border-[#F2CBD1]",
-  warning: "border-[#F5DAA7]",
-  info: "border-[#C5E3F5]",
+  warning: "border-[var(--yellow)]",
+  info: "border-[var(--info-border)]",
 };
 
 interface CdsCardProps {
@@ -32,7 +32,7 @@ export function CdsCard({ card, onDismiss }: CdsCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={indicator.variant}>{indicator.label}</Badge>
-            <span className="text-sm font-semibold text-[#1F2430]">{card.summary}</span>
+            <span className="text-sm font-semibold text-[color:var(--foreground)]">{card.summary}</span>
           </div>
           {onDismiss && (
             <Button
@@ -47,7 +47,7 @@ export function CdsCard({ card, onDismiss }: CdsCardProps) {
           )}
         </div>
 
-        <p className="text-sm text-[#4F5E70]">{card.detail}</p>
+        <p className="text-sm text-[color:var(--muted-foreground)]">{card.detail}</p>
 
         <p className="text-xs text-[#8592A3]">Source: {card.source.label}</p>
 
@@ -56,14 +56,14 @@ export function CdsCard({ card, onDismiss }: CdsCardProps) {
             <button
               type="button"
               onClick={() => setEvidenceOpen(v => !v)}
-              className="flex items-center gap-1 text-xs font-medium text-[#3F1D63]"
+              className="flex items-center gap-1 text-xs font-medium text-[color:var(--brand)]"
               aria-expanded={evidenceOpen}
             >
               {evidenceOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
               Evidence ({card.evidence.length})
             </button>
             {evidenceOpen && (
-              <ul className="mt-2 space-y-1 border-l border-[#DCE6F0] pl-3 text-xs text-[#4F5E70]">
+              <ul className="mt-2 space-y-1 border-l border-[var(--border)] pl-3 text-xs text-[color:var(--muted-foreground)]">
                 {card.evidence.map((item, i) => (
                   <li key={`${item.label}-${item.date ?? i}`}>
                     {item.label}

@@ -34,7 +34,7 @@ export function ActiveRegimenSection({
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-[#1F2430]">Active regimen</h2>
+        <h2 className="text-base font-semibold text-[color:var(--foreground)]">Active regimen</h2>
         {canManageOrders && (
           <Button size="sm" onClick={onAddMedication}>
             Add medication
@@ -43,8 +43,8 @@ export function ActiveRegimenSection({
       </div>
 
       {totalCount === 0 ? (
-        <Card className="border-dashed bg-[#F8FBFD]">
-          <CardContent className="flex flex-col items-center gap-3 py-8 text-center text-sm text-[#4F5E70]">
+        <Card className="border-dashed bg-[var(--background)]">
+          <CardContent className="flex flex-col items-center gap-3 py-8 text-center text-sm text-[color:var(--muted-foreground)]">
             <p>No active medication orders found.</p>
             {canManageOrders && (
               <Button size="sm" onClick={onAddMedication}>
@@ -57,7 +57,7 @@ export function ActiveRegimenSection({
         <div className="space-y-6">
           {GROUP_ORDER.filter(group => regimenByGroup[group].length > 0).map(group => (
             <div key={group}>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#4F5E70]">{CATEGORY_GROUP_LABELS[group]}</h3>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--muted-foreground)]">{CATEGORY_GROUP_LABELS[group]}</h3>
               <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                 {regimenByGroup[group].map(item => (
                   <MedicationRegimenCard

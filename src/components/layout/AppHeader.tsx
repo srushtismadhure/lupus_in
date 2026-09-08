@@ -13,14 +13,14 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-[#DCE6F0] bg-white/95 px-6 py-4 backdrop-blur">
+    <header className="flex items-center justify-between border-b border-[var(--border)] bg-white/95 px-6 py-4 backdrop-blur">
       <div>
-        <h1 className="text-lg font-semibold text-[#1F2430]">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-[#4F5E70]">{subtitle}</p>}
+        <h1 className="text-lg font-semibold text-[color:var(--foreground)]">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-sm text-[color:var(--muted-foreground)]">{subtitle}</p>}
       </div>
 
       <div className="flex items-center gap-3">
-        {user && <span className="hidden text-sm font-medium text-[#4F5E70] lg:inline">{user.displayName}</span>}
+        {user && <span className="hidden text-sm font-medium text-[color:var(--muted-foreground)] lg:inline">{user.displayName}</span>}
         <Button variant="outline" size="sm" onClick={handleLogout}>
           <LogOut className="size-4" />
           Log out

@@ -16,7 +16,7 @@ function abnormalInterpretation(interpretation: string | undefined): boolean {
 function ImmunologyRow({ label, observation }: { label: string; observation?: fhir4.Observation }) {
   if (!observation || observation.valueQuantity?.value === undefined) {
     return (
-      <div className="flex items-center justify-between border-b border-[#E4E7EC] py-2 last:border-0">
+      <div className="flex items-center justify-between border-b border-[var(--border)] py-2 last:border-0">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span className="text-sm text-muted-foreground">Not available</span>
       </div>
@@ -27,7 +27,7 @@ function ImmunologyRow({ label, observation }: { label: string; observation?: fh
   const date = getObservationEffectiveDate(observation);
 
   return (
-    <div className="flex items-center justify-between border-b border-[#E4E7EC] py-2 last:border-0">
+    <div className="flex items-center justify-between border-b border-[var(--border)] py-2 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
       <div className="text-right">
         <p className="text-sm font-medium text-foreground">
@@ -63,7 +63,7 @@ export function ImmunologicActivityCard({ observations }: { observations: fhir4.
         <ImmunologyRow label="Anti-dsDNA" observation={dsDna} />
 
         {anyAbnormal && (
-          <p className="mt-3 rounded-md bg-[#F3EFF7] px-3 py-2 text-xs text-[#3F1D63]">
+          <p className="mt-3 rounded-md bg-[var(--info-bg)] px-3 py-2 text-xs text-[color:var(--brand)]">
             Laboratory pattern requires clinician review.
           </p>
         )}

@@ -22,8 +22,8 @@ function MiniTrend({ series, color, label }: { series: RenalMetricSeries; color:
   return (
     <div className="grid grid-cols-[82px_1fr] items-center gap-3">
       <div>
-        <p className="text-sm font-semibold text-[#344054]">{label}</p>
-        <p className="text-xs text-[#667085]">{series.unit}</p>
+        <p className="text-sm font-semibold text-[color:var(--foreground)]">{label}</p>
+        <p className="text-xs text-[color:var(--muted-foreground)]">{series.unit}</p>
       </div>
       <div className="h-16 min-w-0" role="img" aria-label={`${label} trend from ${data[0]?.value} to ${data.at(-1)?.value}`}>
         <ResponsiveContainer width="100%" height="100%">
@@ -32,7 +32,7 @@ function MiniTrend({ series, color, label }: { series: RenalMetricSeries; color:
             <Tooltip
               formatter={value => [String(value ?? ""), label]}
               labelFormatter={date => formatDate(String(date))}
-              contentStyle={{ border: "1px solid #DCE6F0", borderRadius: 6, fontSize: 12 }}
+              contentStyle={{ border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
             />
             <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} dot={{ r: 3, fill: "#fff", strokeWidth: 2 }} activeDot={{ r: 5 }} />
           </LineChart>
@@ -64,9 +64,9 @@ function HeroMetric({
   accent: "purple" | "blue" | "green" | "rose";
 }) {
   const colors = {
-    purple: "border-t-[#5B2A7D] bg-[#FBF9FC] text-[#5B2A7D]",
-    blue: "border-t-[#4D94C5] bg-[#F7FBFE] text-[#245D86]",
-    green: "border-t-[#4F9468] bg-[#F8FCF9] text-[#356A4A]",
+    purple: "border-t-[var(--brand)] bg-[var(--background)] text-[color:var(--brand)]",
+    blue: "border-t-[var(--clinical-blue)] bg-[var(--blue-panel)] text-[color:var(--link)]",
+    green: "border-t-[var(--success)] bg-[var(--success-bg)] text-[color:var(--success)]",
     rose: "border-t-[#B45B70] bg-[#FFF9FA] text-[#874255]",
   };
   return (
@@ -76,8 +76,8 @@ function HeroMetric({
           <Icon className="size-4" aria-hidden="true" />
           {title}
         </div>
-        <p className="mt-3 text-xl font-semibold text-[#1F2937]">{value}</p>
-        <p className="mt-1 text-xs leading-5 text-[#5D6878]">{detail}</p>
+        <p className="mt-3 text-xl font-semibold text-[color:var(--foreground)]">{value}</p>
+        <p className="mt-1 text-xs leading-5 text-[color:var(--muted-foreground)]">{detail}</p>
       </CardContent>
     </Card>
   );
@@ -92,7 +92,7 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden border-[#D8CDE2]">
+      <Card className="overflow-hidden border-[var(--info-border)]">
         <div className="grid lg:grid-cols-[1fr_300px]">
           <div className="p-5 lg:p-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -102,42 +102,42 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
               </Badge>
               <Badge variant="neutral">Synthetic demo patient</Badge>
             </div>
-            <h2 className="mt-4 text-xl font-semibold text-[#1F2430]">{model.diagnosis.title}</h2>
-            <p className="mt-1 text-lg font-medium text-[#4B2468]">{model.diagnosis.classification}</p>
+            <h2 className="mt-4 text-xl font-semibold text-[color:var(--foreground)]">{model.diagnosis.title}</h2>
+            <p className="mt-1 text-lg font-medium text-[color:var(--brand)]">{model.diagnosis.classification}</p>
 
             <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
               <div>
-                <dt className="text-xs font-medium uppercase text-[#667085]">Activity index</dt>
-                <dd className="mt-1 text-base font-semibold text-[#1F2937]">{model.activityIndex}/24</dd>
+                <dt className="text-xs font-medium uppercase text-[color:var(--muted-foreground)]">Activity index</dt>
+                <dd className="mt-1 text-base font-semibold text-[color:var(--foreground)]">{model.activityIndex}/24</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-[#667085]">Chronicity index</dt>
-                <dd className="mt-1 text-base font-semibold text-[#1F2937]">{model.chronicityIndex}/12</dd>
+                <dt className="text-xs font-medium uppercase text-[color:var(--muted-foreground)]">Chronicity index</dt>
+                <dd className="mt-1 text-base font-semibold text-[color:var(--foreground)]">{model.chronicityIndex}/12</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-[#667085]">Biopsy date</dt>
-                <dd className="mt-1 text-base font-semibold text-[#1F2937]">{formatDate(model.diagnosis.biopsyDate)}</dd>
+                <dt className="text-xs font-medium uppercase text-[color:var(--muted-foreground)]">Biopsy date</dt>
+                <dd className="mt-1 text-base font-semibold text-[color:var(--foreground)]">{formatDate(model.diagnosis.biopsyDate)}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-[#667085]">Treatment phase</dt>
-                <dd className="mt-1 text-base font-semibold text-[#1F2937]">{model.diagnosis.treatmentPhase}</dd>
+                <dt className="text-xs font-medium uppercase text-[color:var(--muted-foreground)]">Treatment phase</dt>
+                <dd className="mt-1 text-base font-semibold text-[color:var(--foreground)]">{model.diagnosis.treatmentPhase}</dd>
               </div>
               <div className="col-span-2">
-                <dt className="text-xs font-medium uppercase text-[#667085]">Renal response</dt>
-                <dd className="mt-1 text-base font-semibold text-[#1F2937]">{model.diagnosis.renalResponse}</dd>
+                <dt className="text-xs font-medium uppercase text-[color:var(--muted-foreground)]">Renal response</dt>
+                <dd className="mt-1 text-base font-semibold text-[color:var(--foreground)]">{model.diagnosis.renalResponse}</dd>
               </div>
             </dl>
             <RenalProvenance items={[model.diagnosis.provenance, model.pathologyReport?.provenance]} />
           </div>
 
           {pathologyImage && (
-            <figure className="border-t border-[#E4DAEC] bg-[#F7F1F8] p-4 lg:border-t-0 lg:border-l">
+            <figure className="border-t border-[var(--info-border)] bg-[var(--blue-panel)] p-4 lg:border-t-0 lg:border-l">
               <img
                 src={pathologyImage}
                 alt="Synthetic Class IV pathology illustration; not actual patient tissue"
-                className="aspect-square w-full rounded-md border border-[#D8CDE2] object-cover"
+                className="aspect-square w-full rounded-md border border-[var(--info-border)] object-cover"
               />
-              <figcaption className="mt-2 text-xs leading-5 text-[#5D5266]">
+              <figcaption className="mt-2 text-xs leading-5 text-[color:var(--muted-foreground)]">
                 Synthetic Class IV pathology illustration — not actual patient tissue
               </figcaption>
             </figure>
@@ -171,7 +171,7 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Renal response snapshot</CardTitle>
-            <p className="mt-1 text-xs text-[#667085]">Aligned preview of renal recovery and key treatment changes</p>
+            <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">Aligned preview of renal recovery and key treatment changes</p>
           </div>
           <Button asChild variant="outline" size="sm">
             <Link to={`/patients/${model.patientId}/renal-timeline`}>
@@ -180,10 +180,10 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {model.series.egfr && <MiniTrend series={model.series.egfr} color="#4D94C5" label="eGFR" />}
-          {model.series.upcr && <MiniTrend series={model.series.upcr} color="#5B2A7D" label="UPCR" />}
-          <div className="grid grid-cols-[82px_1fr] items-start gap-3 border-t border-[#E4EAF0] pt-3">
-            <p className="text-sm font-semibold text-[#344054]">Markers</p>
+          {model.series.egfr && <MiniTrend series={model.series.egfr} color="var(--clinical-blue)" label="eGFR" />}
+          {model.series.upcr && <MiniTrend series={model.series.upcr} color="var(--brand)" label="UPCR" />}
+          <div className="grid grid-cols-[82px_1fr] items-start gap-3 border-t border-[var(--border)] pt-3">
+            <p className="text-sm font-semibold text-[color:var(--foreground)]">Markers</p>
             <div className="flex flex-wrap gap-2 text-xs">
               <Badge variant="warning">Jul 2025 · Flare + biopsy</Badge>
               <Badge variant="purple">Jul 2025 · MMF</Badge>
@@ -199,14 +199,14 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
             <CardTitle className="text-base">Current regimen</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="divide-y divide-[#E4EAF0]">
+            <ul className="divide-y divide-[var(--border)]">
               {regimen.map(medication => (
                 <li key={medication.name} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
                   <div>
-                    <p className="text-sm font-semibold text-[#1F2937]">{medication.name}</p>
-                    <p className="mt-0.5 text-xs text-[#667085]">Started {medication.startDate ? formatDate(medication.startDate) : "date not reported"}</p>
+                    <p className="text-sm font-semibold text-[color:var(--foreground)]">{medication.name}</p>
+                    <p className="mt-0.5 text-xs text-[color:var(--muted-foreground)]">Started {medication.startDate ? formatDate(medication.startDate) : "date not reported"}</p>
                   </div>
-                  <p className="max-w-[52%] text-right text-sm text-[#475467]">{medication.currentDose ?? "Dose not reported"}</p>
+                  <p className="max-w-[52%] text-right text-sm text-[color:var(--muted-foreground)]">{medication.currentDose ?? "Dose not reported"}</p>
                 </li>
               ))}
             </ul>
@@ -221,8 +221,8 @@ export function RenalResponseOverview({ model }: { model: RenalResponseModel }) 
           <CardContent>
             <ul className="space-y-3">
               {model.clinicalSummary.map(statement => (
-                <li key={statement} className="flex gap-3 text-sm leading-5 text-[#344054]">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#5B2A7D]" aria-hidden="true" />
+                <li key={statement} className="flex gap-3 text-sm leading-5 text-[color:var(--foreground)]">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--brand)]" aria-hidden="true" />
                   {statement}
                 </li>
               ))}

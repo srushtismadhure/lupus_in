@@ -72,10 +72,10 @@ export function FhirTransparencyPanel({ patient, conditions, observations, medic
               </Badge>
             ))}
           </div>
-          <div className="max-h-64 overflow-y-auto rounded-md border border-[#E4E7EC]">
+          <div className="max-h-64 overflow-y-auto rounded-md border border-[var(--border)]">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-[#E4E7EC] text-muted-foreground">
+                <tr className="border-b border-[var(--border)] text-muted-foreground">
                   <th className="px-3 py-2 font-medium">Resource</th>
                   <th className="px-3 py-2 font-medium">ID</th>
                   <th className="px-3 py-2 font-medium">Coding</th>
@@ -84,7 +84,7 @@ export function FhirTransparencyPanel({ patient, conditions, observations, medic
               </thead>
               <tbody>
                 {rows.map((row, index) => (
-                  <tr key={`${row.resourceType}-${row.id ?? index}`} className="border-b border-[#E4E7EC] last:border-0">
+                  <tr key={`${row.resourceType}-${row.id ?? index}`} className="border-b border-[var(--border)] last:border-0">
                     <td className="px-3 py-1.5">{row.resourceType}</td>
                     <td className="px-3 py-1.5 font-mono">{row.id ?? "—"}</td>
                     <td className="px-3 py-1.5">{row.system && row.code ? `${row.system} ${row.code}` : row.code ?? "—"}</td>

@@ -217,7 +217,7 @@ export function PatientFormDialog({ open, onOpenChange, mode, patient, onSaved }
               />
               {fieldErrors.birthDate && <p className="text-xs text-destructive">{fieldErrors.birthDate}</p>}
               {birthDateCheck?.valid && birthDateCheck.requiresAgeConfirmation && !ageConfirmed && (
-                <label className="mt-1 flex items-start gap-2 text-xs text-[#9A6418]">
+                <label className="mt-1 flex items-start gap-2 text-xs text-[color:var(--warning-text)]">
                   <input
                     type="checkbox"
                     checked={ageConfirmed}

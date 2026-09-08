@@ -45,23 +45,23 @@ export function CdsConflictsSection({ issues, canResolve, onResolved }: { issues
 
   return (
     <section>
-      <h2 className="mb-3 text-base font-semibold text-[#1F2430]">CDS conflicts</h2>
+      <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">CDS conflicts</h2>
 
       {openIssues.length === 0 ? (
-        <Card className="border-dashed bg-[#F8FBFD]">
-          <CardContent className="text-center text-sm text-[#4F5E70]">No conflicts detected from available data.</CardContent>
+        <Card className="border-dashed bg-[var(--background)]">
+          <CardContent className="text-center text-sm text-[color:var(--muted-foreground)]">No conflicts detected from available data.</CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {openIssues.map(issue => (
-            <Card key={issue.id} className={issue.severity === "high" ? "border-[#F2CBD1]" : "border-[#F5DAA7]"}>
+            <Card key={issue.id} className={issue.severity === "high" ? "border-[#F2CBD1]" : "border-[var(--yellow)]"}>
               <CardContent className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {severityBadge(issue.severity)}
-                  <span className="text-sm font-medium text-[#1F2430]">{issue.summary ?? "Medication safety conflict requires review"}</span>
+                  <span className="text-sm font-medium text-[color:var(--foreground)]">{issue.summary ?? "Medication safety conflict requires review"}</span>
                 </div>
                 {issue.implicatedMedicationRequestIds.length > 0 && (
-                  <p className="text-xs text-[#4F5E70]">Evidence: {issue.implicatedMedicationRequestIds.map(id => `MedicationRequest/${id}`).join(", ")}</p>
+                  <p className="text-xs text-[color:var(--muted-foreground)]">Evidence: {issue.implicatedMedicationRequestIds.map(id => `MedicationRequest/${id}`).join(", ")}</p>
                 )}
                 {canResolve && (
                   <div className="flex flex-wrap gap-2 pt-1">

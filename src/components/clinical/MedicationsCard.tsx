@@ -13,7 +13,7 @@ export function MedicationsCard({ medicationRequests }: { medicationRequests: fh
         )}
         <ul className="space-y-2">
           {medicationRequests.map(medicationRequest => (
-            <li key={medicationRequest.id} className="border-b border-[#E4E7EC] pb-2 last:border-0">
+            <li key={medicationRequest.id} className="border-b border-[var(--border)] pb-2 last:border-0">
               <p className="text-sm font-medium text-foreground">{formatMedicationText(medicationRequest)}</p>
               <p className="text-xs text-muted-foreground">
                 {medicationRequest.status} / {medicationRequest.intent}

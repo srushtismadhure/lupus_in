@@ -11,7 +11,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn("inline-flex h-10 w-fit items-center gap-1 rounded-lg border border-[#DCE6F0] bg-[#F8FAFD] p-1", className)}
+      className={cn("inline-flex h-10 w-fit items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--background)] p-1", className)}
       {...props}
     />
   );
@@ -22,9 +22,9 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-[#4F5E70] outline-none transition-colors",
-        "hover:text-[#1F2430] focus-visible:ring-[3px] focus-visible:ring-[#4F97C8]/35",
-        "data-[state=active]:bg-white data-[state=active]:text-[#3F1D63] data-[state=active]:shadow-sm",
+        "inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-[color:var(--muted-foreground)] outline-none transition-colors",
+        "hover:text-[color:var(--foreground)] focus-visible:ring-[3px] focus-visible:ring-[var(--primary)]/35",
+        "data-[state=active]:bg-white data-[state=active]:text-[color:var(--brand)] data-[state=active]:shadow-sm",
         "disabled:pointer-events-none disabled:opacity-50",
         className,
       )}
