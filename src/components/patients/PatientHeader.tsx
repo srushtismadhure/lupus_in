@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PatientFormDialog } from "@/components/patients/PatientFormDialog";
 import { DeactivatePatientDialog } from "@/components/patients/DeactivatePatientDialog";
-import { formatPatientAge, formatPatientName, isLupusNephritisCondition } from "@/lib/formatters";
+import { formatPatientAge, formatPatientName } from "@/lib/formatters";
 
 interface PatientHeaderProps {
   patient: fhir4.Patient;
@@ -22,8 +22,6 @@ export function PatientHeader({ patient, conditions, onCreateTask, onAddClinical
   const [editOpen, setEditOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
 
-  const hasLupusNephritis = conditions.some(isLupusNephritisCondition);
-
   return (
     <Card className="mb-6 flex-row flex-wrap items-start justify-between gap-4 p-5">
       <div>
@@ -34,7 +32,6 @@ export function PatientHeader({ patient, conditions, onCreateTask, onAddClinical
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-xl font-semibold text-foreground">{formatPatientName(patient)}</h2>
           {patient.active === false ? <Badge variant="neutral">Inactive</Badge> : <Badge variant="success">Active</Badge>}
-          {hasLupusNephritis && <Badge variant="purple">Lupus nephritis</Badge>}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {patient.gender ?? "Unknown gender"} · {formatPatientAge(patient) ? `${formatPatientAge(patient)} years` : "Unknown age"} ·{" "}
