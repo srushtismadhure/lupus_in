@@ -82,6 +82,12 @@ function buildPatientView(
   observations: fhir4.Observation[],
   tasks: fhir4.Task[],
 ): WorklistPatientView {
+  const hasCopd = conditions.some(condition =>
+    condition.code?.coding?.some(coding =>
+      coding.system === "http://hl7.org/fhir/sid/icd-10-cm" && /^J44(?:\.|$)/.test(coding.code ?? "") ||
+      /chronic obstructive pulmonary disease|\bcopd\b/i.test(coding.display ?? ""),
+    ) || /chronic obstructive pulmonary disease|\bcopd\b/i.test(condition.code?.text ?? ""),
+  );
   const hasLupusNephritis = conditions.some(isLupusNephritisCondition);
   const primaryCondition = conditions.find(isLupusNephritisCondition) ?? conditions[0];
 
@@ -162,6 +168,7 @@ function buildPatientView(
     age: patient.birthDate ? computeAgeInYears(patient.birthDate) : undefined,
     gender: patient.gender,
     active: patient.active !== false,
+    hasCopd,
     hasLupusNephritis,
     primaryConditionText: primaryCondition ? formatConditionText(primaryCondition) : undefined,
     latestUpcr,

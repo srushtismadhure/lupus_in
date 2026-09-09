@@ -1,95 +1,14 @@
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { WorklistPatientView } from "@/lib/worklist-types";
+import type { CopdPatientQuickLook } from "@/lib/patient-overview/normalize";
 
-function monitoringBadge(status: WorklistPatientView["monitoringStatus"]) {
-  if (status === "overdue") return <Badge variant="warning">Overdue</Badge>;
-  if (status === "insufficient-data") return <Badge variant="neutral">Insufficient data</Badge>;
-  return <Badge variant="info">Current</Badge>;
-}
-
-function formatObservationCell(value: WorklistPatientView["latestUpcr"]): string {
-  if (!value) return "Not available";
-  return `${value.value}${value.unit ? ` ${value.unit}` : ""}`;
-}
-
-interface AllPatientsTableProps {
-  patients: WorklistPatientView[];
-  onEdit: (patient: fhir4.Patient) => void;
-  onDeactivate: (patient: fhir4.Patient) => void;
-}
-
-export function AllPatientsTable({ patients, onEdit, onDeactivate }: AllPatientsTableProps) {
-  const navigate = useNavigate();
-
-  return (
-    <Card className="gap-0 overflow-hidden p-0">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs uppercase text-[color:var(--muted-foreground)]">
-              <th className="px-5 py-3 font-semibold">Name</th>
-              <th className="px-5 py-3 font-semibold">Age</th>
-              <th className="px-5 py-3 font-semibold">Primary condition</th>
-              <th className="px-5 py-3 font-semibold">Latest UPCR</th>
-              <th className="px-5 py-3 font-semibold">Latest eGFR</th>
-              <th className="px-5 py-3 font-semibold">Monitoring</th>
-              <th className="px-5 py-3 font-semibold">Open tasks</th>
-              <th className="px-5 py-3 font-semibold">Status</th>
-              <th className="px-5 py-3 font-semibold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {patients.map(view => (
-              <tr
-                key={view.patient.id}
-                tabIndex={0}
-                role="button"
-                aria-label={`Open patient ${view.name}`}
-                className="cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--blue-panel)] focus-visible:bg-[var(--blue-panel)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset"
-                onClick={() => navigate(`/patients/${view.patient.id}`)}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navigate(`/patients/${view.patient.id}`);
-                  }
-                }}
-              >
-                <td className="px-5 py-4 font-semibold text-[color:var(--foreground)]">{view.name}</td>
-                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.age ?? "—"}</td>
-                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.primaryConditionText ?? "Not available"}</td>
-                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestUpcr)}</td>
-                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{formatObservationCell(view.latestEgfr)}</td>
-                <td className="px-5 py-4">{monitoringBadge(view.monitoringStatus)}</td>
-                <td className="px-5 py-4 text-[color:var(--muted-foreground)]">{view.openTaskCount}</td>
-                <td className="px-5 py-4">
-                  {view.active ? <Badge variant="success">Active</Badge> : <Badge variant="neutral">Inactive</Badge>}
-                </td>
-                <td className="px-5 py-4 text-right" onClick={e => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-sm">
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate(`/patients/${view.patient.id}`)}>Open patient</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(view.patient)}>Edit patient</DropdownMenuItem>
-                      <DropdownMenuItem variant="destructive" onClick={() => onDeactivate(view.patient)} disabled={!view.active}>
-                        Deactivate patient
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
-  );
-}
+function statusBadge(view: WorklistPatientView) { if (!view.active) return <Badge variant="neutral">Inactive</Badge>; if (view.openTaskCount > 0) return <Badge variant="warning">Needs review</Badge>; return <Badge variant="success">Active</Badge>; }
+function summary(quick?: CopdPatientQuickLook) { if (!quick) return { label: "Insufficient data", detail: "Details unavailable" }; const gap = quick.ambulatoryCare.pulmonology.status === "due" || quick.ambulatoryCare.pulmonology.status === "overdue"; if (gap) return { label: "1 care gap", detail: "Follow-up" }; const unknown = [quick.ambulatoryCare.pulmonology.status, quick.ambulatoryCare.pulmonaryRehab.status, quick.ambulatoryCare.vaccinations.status].some(value => value === "unknown" || value === "not-documented"); return unknown ? { label: "Insufficient data", detail: "Review supported records" } : { label: "Current", detail: "No confirmed gaps" }; }
+function quickDetails(quick: CopdPatientQuickLook) { const care = quick.ambulatoryCare; return <div className="grid gap-3 rounded-md bg-[var(--background)] p-4 text-sm sm:grid-cols-2 lg:grid-cols-3"><div><span className="text-[color:var(--muted-foreground)]">Pulmonology follow-up</span><p className="font-medium capitalize">{care.pulmonology.status.replaceAll("-", " ")}</p></div><div><span className="text-[color:var(--muted-foreground)]">Pulmonary rehab</span><p className="font-medium capitalize">{care.pulmonaryRehab.status.replaceAll("-", " ")}</p></div><div><span className="text-[color:var(--muted-foreground)]">Smoking cessation</span><p className="font-medium">{care.smokingCessation.smokingStatus ?? "Unknown"} · {care.smokingCessation.support === "addressed" ? "Addressed" : "Not documented"}</p></div><div><span className="text-[color:var(--muted-foreground)]">Vaccinations</span><p className="font-medium capitalize">{care.vaccinations.status.replaceAll("-", " ")}</p></div><div><span className="text-[color:var(--muted-foreground)]">Lung cancer screening</span><p className="font-medium capitalize">{care.lungCancerScreening.status.replaceAll("-", " ")}</p></div>{care.recentExacerbation && <div><span className="text-[color:var(--muted-foreground)]">Recent exacerbation</span><p className="font-medium">{new Date(care.recentExacerbation.date).toLocaleDateString()} · {care.recentExacerbation.context}</p></div>}</div>; }
+interface AllPatientsTableProps { patients: WorklistPatientView[]; quickLooks: Record<string, CopdPatientQuickLook>; onEdit: (patient: fhir4.Patient) => void; onDeactivate: (patient: fhir4.Patient) => void; }
+export function AllPatientsTable({ patients, quickLooks, onEdit, onDeactivate }: AllPatientsTableProps) { const navigate = useNavigate(); const [expanded, setExpanded] = useState<string | null>(null); return <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white"><div className="overflow-x-auto"><table className="min-w-[1080px] w-full text-left text-sm"><thead><tr className="border-b border-[var(--border)] bg-[var(--background)] text-xs font-semibold text-[color:var(--brand)]"><th className="px-4 py-3">Patient</th><th className="px-4 py-3">Age</th><th className="px-4 py-3">COPD status</th><th className="px-4 py-3">Respiratory status</th><th className="px-4 py-3">Recent exacerbation</th><th className="px-4 py-3">Ambulatory care</th><th className="px-4 py-3">Home health</th><th className="px-4 py-3">Tasks</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody>{patients.map(view => { const quick = quickLooks[view.patient.id ?? ""]; const careSummary = summary(quick); return <Fragment key={view.patient.id}><tr tabIndex={0} role="button" aria-label={`Inspect patient ${view.name}`} className="cursor-pointer border-b border-[var(--border)] outline-none hover:bg-[var(--info-bg)] focus-visible:bg-[var(--info-bg)]" onClick={() => setExpanded(current => current === view.patient.id ? null : view.patient.id ?? null)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpanded(current => current === view.patient.id ? null : view.patient.id ?? null); } }}><td className="px-4 py-4 font-semibold text-[color:var(--brand)]">{view.name}</td><td className="px-4 py-4 text-[color:var(--muted-foreground)]">{view.age ?? "—"}</td><td className="px-4 py-4"><Badge variant="info">Confirmed</Badge></td><td className="px-4 py-4 text-[color:var(--muted-foreground)]">{quick?.respiratoryStatus.spo2 ? `SpO2 ${quick.respiratoryStatus.spo2.value}%` : "Insufficient data"}</td><td className="px-4 py-4 text-[color:var(--muted-foreground)]">{quick?.exacerbations.supported ? `${quick.exacerbations.count} documented` : "Insufficient data"}</td><td className="px-4 py-4"><div><Badge variant={careSummary.label === "Current" ? "success" : careSummary.label === "Insufficient data" ? "neutral" : "warning"}>{careSummary.label}</Badge><p className="mt-1 text-xs text-[color:var(--muted-foreground)]">{careSummary.detail}</p></div></td><td className="px-4 py-4 text-[color:var(--muted-foreground)]">{quick?.care.homeHealth === "active" ? "Active" : "Insufficient data"}</td><td className="px-4 py-4 font-medium">{view.openTaskCount}</td><td className="px-4 py-4">{statusBadge(view)}</td><td className="px-4 py-4 text-right" onClick={event => event.stopPropagation()}><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => navigate(`/patients/${view.patient.id}`)}>Open patient</DropdownMenuItem><DropdownMenuItem onClick={() => onEdit(view.patient)}>Edit patient</DropdownMenuItem><DropdownMenuItem variant="destructive" onClick={() => onDeactivate(view.patient)} disabled={!view.active}>Deactivate patient</DropdownMenuItem></DropdownMenuContent></DropdownMenu></td></tr>{expanded === view.patient.id && <tr className="border-b border-[var(--border)]"><td colSpan={10} className="px-4 py-3"><div className="flex items-start justify-between gap-4"><div className="min-w-0 flex-1">{quick ? quickDetails(quick) : <p className="text-sm text-[color:var(--muted-foreground)]">Ambulatory details are insufficient to display.</p>}</div><Button size="sm" variant="outline" onClick={event => { event.stopPropagation(); navigate(`/patients/${view.patient.id}`); }}>Open patient record</Button></div></td></tr>}</Fragment>; })}</tbody></table></div></div>; }

@@ -23,6 +23,12 @@ import {
   getPatientDiagnosticReports,
   getPatientMedicationAdministrations,
   getPatientMedicationRequests,
+  getPatientMedicationStatements,
+  getPatientEncounters,
+  getPatientDetectedIssues,
+  getPatientDocumentReferences,
+  getPatientServiceRequests,
+  getPatientImmunizations,
   getPatientObservations,
   getPatientTasks,
 } from "@/lib/fhir";
@@ -36,6 +42,7 @@ import {
   LOINC_CODES,
 } from "@/lib/fhir-observations";
 import { buildRenalResponseModel } from "@/lib/renal-response";
+import { CopdOverview } from "@/components/patient-overview/CopdOverview";
 
 interface SectionState<T> {
   data: T;
@@ -50,6 +57,12 @@ interface DashboardData {
   diagnosticReports: SectionState<fhir4.DiagnosticReport[]>;
   medicationAdministrations: SectionState<fhir4.MedicationAdministration[]>;
   tasks: SectionState<fhir4.Task[]>;
+  encounters: SectionState<fhir4.Encounter[]>;
+  medicationStatements: SectionState<fhir4.MedicationStatement[]>;
+  detectedIssues: SectionState<fhir4.DetectedIssue[]>;
+  documentReferences: SectionState<fhir4.DocumentReference[]>;
+  serviceRequests: SectionState<fhir4.ServiceRequest[]>;
+  immunizations: SectionState<fhir4.Immunization[]>;
 }
 
 function fromSettled<T>(result: PromiseSettledResult<T[]>): SectionState<T[]> {
@@ -72,13 +85,19 @@ export function PatientDashboardPage() {
 
     try {
       const patient = await getPatient(patientId);
-      const [conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks] = await Promise.allSettled([
+      const [conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks, encounters, medicationStatements, detectedIssues, documentReferences, serviceRequests, immunizations] = await Promise.allSettled([
         getPatientConditions(patientId),
         getPatientObservations(patientId),
         getPatientMedicationRequests(patientId),
         getPatientMedicationAdministrations(patientId),
         getPatientDiagnosticReports(patientId),
         getPatientTasks(patientId),
+        getPatientEncounters(patientId),
+        getPatientMedicationStatements(patientId),
+        getPatientDetectedIssues(patientId),
+        getPatientDocumentReferences(patientId),
+        getPatientServiceRequests(patientId),
+        getPatientImmunizations(patientId),
       ]);
 
       setData({
@@ -89,6 +108,12 @@ export function PatientDashboardPage() {
         medicationAdministrations: fromSettled(medicationAdministrations),
         diagnosticReports: fromSettled(diagnosticReports),
         tasks: fromSettled(tasks),
+        encounters: fromSettled(encounters),
+        medicationStatements: fromSettled(medicationStatements),
+        detectedIssues: fromSettled(detectedIssues),
+        documentReferences: fromSettled(documentReferences),
+        serviceRequests: fromSettled(serviceRequests),
+        immunizations: fromSettled(immunizations),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load patient");
@@ -119,7 +144,28 @@ export function PatientDashboardPage() {
     );
   }
 
-  const { patient, conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks } = data;
+  const { patient, conditions, observations, medicationRequests, medicationAdministrations, diagnosticReports, tasks, encounters, medicationStatements, detectedIssues, documentReferences, serviceRequests, immunizations } = data;
+  const partialData = conditions.failed || observations.failed || medicationRequests.failed || medicationAdministrations.failed || diagnosticReports.failed || tasks.failed;
+
+  const isCopdPatient = conditions.data.some(condition => condition.code?.coding?.some(coding => coding.code === "J44.9" || /chronic obstructive pulmonary disease|copd/i.test(coding.display ?? "")) || /chronic obstructive pulmonary disease|copd/i.test(condition.code?.text ?? ""));
+
+  if (isCopdPatient) {
+    return (
+      <AppShell title="Patient overview" subtitle="COPD clinical overview and post-acute care status">
+        <PatientHeader
+          patient={patient}
+          conditions={conditions.data}
+          onCreateTask={() => setCreateTaskOpen(true)}
+          onAddClinicalNote={() => patient.id && navigate(`/patients/${patient.id}/notes-coding`)}
+          onPatientUpdated={() => setReloadKey(k => k + 1)}
+        />
+        {patient.id && <PatientSubNav patientId={patient.id} />}
+        {partialData && <Alert variant="warning" className="mb-4"><AlertDescription className="flex items-center justify-between gap-3"><span>Some clinical data could not be loaded.</span><Button size="sm" variant="outline" onClick={() => setReloadKey(k => k + 1)}>Retry</Button></AlertDescription></Alert>}
+        <CopdOverview patientId={patient.id ?? ""} conditions={conditions.data} observations={observations.data} medicationRequests={medicationRequests.data} tasks={tasks.data} encounters={encounters.data} medicationStatements={medicationStatements.data} detectedIssues={detectedIssues.data} documentReferences={documentReferences.data} serviceRequests={serviceRequests.data} immunizations={immunizations.data} diagnosticReports={diagnosticReports.data} />
+        {patient.id && <CreateTaskDialog open={createTaskOpen} onOpenChange={setCreateTaskOpen} patientId={patient.id} onCreated={() => setReloadKey(k => k + 1)} />}
+      </AppShell>
+    );
+  }
 
   const renalModel = buildRenalResponseModel({
     patient,
@@ -129,14 +175,6 @@ export function PatientDashboardPage() {
     medicationRequests: medicationRequests.data,
     medicationAdministrations: medicationAdministrations.data,
   });
-
-  const partialData =
-    conditions.failed ||
-    observations.failed ||
-    medicationRequests.failed ||
-    medicationAdministrations.failed ||
-    diagnosticReports.failed ||
-    tasks.failed;
 
   if (renalModel.mode === "renal-response") {
     return (

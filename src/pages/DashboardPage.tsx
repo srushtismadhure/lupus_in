@@ -33,10 +33,13 @@ export function DashboardPage() {
     load();
   }, [load, refreshKey]);
 
+  const copdPatients = data?.allPatients.filter(view => /copd|chronic obstructive pulmonary disease/i.test(view.primaryConditionText ?? "")) ?? [];
+  const copdAttentionQueue = copdPatients.filter(view => view.openTaskCount > 0 || view.primaryAttentionReason);
+
   return (
     <AppShell
       title="Welcome Back, Dr. Madhure!"
-      subtitle="LoopedIn doctor view for renal changes, overdue monitoring, and unresolved follow-up."
+      subtitle="Review COPD status, home-health updates, care gaps, and follow-up needs."
     >
       <div className="mb-5 flex items-center justify-end">
         <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)} disabled={loading}>
@@ -94,37 +97,37 @@ export function DashboardPage() {
               onAction={() => navigate("/patients")}
             />
             <SummaryStatCard
-              label="Lupus nephritis"
-              value={data.summary.lupusNephritisPatients}
-              accent="purple"
+              label="COPD patients"
+              value={copdPatients.length}
+              accent="blue"
               actionLabel="View report"
               onAction={() => navigate("/patients")}
             />
             <SummaryStatCard
-              label="Needing review"
-              value={data.summary.needsReview}
-              accent="red"
-              actionLabel="View report"
-              onAction={() => navigate("/patients")}
-            />
-            <SummaryStatCard
-              label="Monitoring overdue"
-              value={data.summary.monitoringOverdue}
+              label="Needs review"
+              value={copdAttentionQueue.length}
               accent="amber"
               actionLabel="View report"
               onAction={() => navigate("/patients")}
             />
             <SummaryStatCard
-              label="Open high-priority tasks"
-              value={data.summary.openHighPriorityTasks}
-              accent="amber"
-              actionLabel="View report"
-              onAction={() => navigate("/patients")}
-            />
-            <SummaryStatCard
-              label="Insufficient data"
-              value={data.summary.insufficientData}
+              label="Recent exacerbations"
+              value="—"
               accent="neutral"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Open tasks"
+              value={copdPatients.reduce((total, view) => total + view.openTaskCount, 0)}
+              accent="amber"
+              actionLabel="View report"
+              onAction={() => navigate("/patients")}
+            />
+            <SummaryStatCard
+              label="Home health active"
+              value="—"
+              accent="green"
               actionLabel="View report"
               onAction={() => navigate("/patients")}
             />
@@ -132,7 +135,7 @@ export function DashboardPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">Attention Queue</h2>
-            <AttentionQueueTable patients={data.attentionQueue} />
+            <AttentionQueueTable patients={copdAttentionQueue} />
           </section>
         </>
       )}

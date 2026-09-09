@@ -25,8 +25,8 @@ export function isDemoRole(value: unknown): value is DemoRole {
 }
 
 export const DEMO_USERS: Record<DemoRole, { email: string; displayName: string; patientId?: string }> = {
-  nurse: { email: "rn@nephra.app", displayName: "LoopedIn RN Care Coordinator" },
-  clinician: { email: "demo@nephra.app", displayName: "LoopedIn Demo Clinician" },
+  nurse: { email: "rn@nephra.app", displayName: "Waypoint RN Care Coordinator" },
+  clinician: { email: "demo@nephra.app", displayName: "Waypoint Demo Clinician" },
   patient: {
     email: "madison@nephra.app",
     displayName: "Madison Grace",

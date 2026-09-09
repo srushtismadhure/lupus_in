@@ -126,6 +126,36 @@ export async function getPatientTasks(patientId: string): Promise<fhir4.Task[]> 
   );
 }
 
+export async function getPatientEncounters(patientId: string): Promise<fhir4.Encounter[]> {
+  const bundle = await fhirFetch(`/Encounter?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.Encounter>(bundle, "Encounter").filter(item => referencesPatient(item.subject, patientId));
+}
+
+export async function getPatientMedicationStatements(patientId: string): Promise<fhir4.MedicationStatement[]> {
+  const bundle = await fhirFetch(`/MedicationStatement?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.MedicationStatement>(bundle, "MedicationStatement").filter(item => referencesPatient(item.subject, patientId));
+}
+
+export async function getPatientDetectedIssues(patientId: string): Promise<fhir4.DetectedIssue[]> {
+  const bundle = await fhirFetch(`/DetectedIssue?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.DetectedIssue>(bundle, "DetectedIssue").filter(item => referencesPatient(item.patient, patientId));
+}
+
+export async function getPatientDocumentReferences(patientId: string): Promise<fhir4.DocumentReference[]> {
+  const bundle = await fhirFetch(`/DocumentReference?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.DocumentReference>(bundle, "DocumentReference").filter(item => referencesPatient(item.subject, patientId));
+}
+
+export async function getPatientServiceRequests(patientId: string): Promise<fhir4.ServiceRequest[]> {
+  const bundle = await fhirFetch(`/ServiceRequest?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.ServiceRequest>(bundle, "ServiceRequest").filter(item => referencesPatient(item.subject, patientId));
+}
+
+export async function getPatientImmunizations(patientId: string): Promise<fhir4.Immunization[]> {
+  const bundle = await fhirFetch(`/Immunization?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.Immunization>(bundle, "Immunization").filter(item => referencesPatient(item.patient, patientId));
+}
+
 export async function createTask(task: fhir4.Task): Promise<fhir4.Task> {
   const resource = await fhirFetch("/Task", { method: "POST", body: task });
   return resource as fhir4.Task;

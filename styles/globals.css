@@ -43,11 +43,16 @@
 
 :root {
   --radius: 0.5rem;
-  --brand: #304070;
-  --clinical-blue: #4f8fcb;
-  --sky-blue: #80c0f0;
-  --mint: #a0e6dc;
-  --yellow: #f0d060;
+  --brand-navy: #304070;
+  --brand-blue: #4f8fcb;
+  --brand-light-blue: #80c0f0;
+  --brand-aqua: #a0e6dc;
+  --brand-yellow: #f0d060;
+  --brand: var(--brand-navy);
+  --clinical-blue: var(--brand-blue);
+  --sky-blue: var(--brand-light-blue);
+  --mint: var(--brand-aqua);
+  --yellow: var(--brand-yellow);
   --brand-hover: #26345c;
   --link: #306da5;
   --info-bg: #edf6fd;

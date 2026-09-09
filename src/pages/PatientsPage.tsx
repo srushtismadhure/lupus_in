@@ -6,21 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AllPatientsTable } from "@/components/dashboard/AllPatientsTable";
 import { PatientFormDialog } from "@/components/patients/PatientFormDialog";
 import { DeactivatePatientDialog } from "@/components/patients/DeactivatePatientDialog";
 import { getClinicianWorklist } from "@/lib/worklist-client";
 import type { ClinicianWorklistResponse } from "@/lib/worklist-types";
 
-type PatientFilter = "all" | "lupus-nephritis" | "needs-review" | "monitoring-overdue" | "open-tasks" | "insufficient-data";
+type PatientFilter = "all" | "needs-review" | "open-tasks" | "insufficient-data";
+type SortOption = "last-updated" | "name" | "age" | "most-tasks";
 
 const FILTERS: { value: PatientFilter; label: string }[] = [
-  { value: "all", label: "All patients" },
-  { value: "lupus-nephritis", label: "Lupus nephritis" },
+  { value: "all", label: "All" },
   { value: "needs-review", label: "Needs review" },
-  { value: "monitoring-overdue", label: "Monitoring overdue" },
   { value: "open-tasks", label: "Open tasks" },
   { value: "insufficient-data", label: "Insufficient data" },
+];
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "last-updated", label: "Last updated" },
+  { value: "name", label: "Name" },
+  { value: "age", label: "Age" },
+  { value: "most-tasks", label: "Most open tasks" },
 ];
 
 export function PatientsPage() {
@@ -32,6 +39,7 @@ export function PatientsPage() {
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<PatientFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("last-updated");
   const [includeInactive, setIncludeInactive] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -59,21 +67,19 @@ export function PatientsPage() {
     if (!data) return [];
     const trimmedQuery = query.trim().toLowerCase();
 
-    return data.allPatients.filter(view => {
+    const filtered = data.allPatients.filter(view => {
+      if (!view.hasCopd) return false;
       if (!includeInactive && !view.active) return false;
-      if (trimmedQuery && !view.name.toLowerCase().includes(trimmedQuery)) return false;
+      const identifiers = view.patient.identifier?.map(identifier => identifier.value ?? "").join(" ").toLowerCase() ?? "";
+      if (trimmedQuery && !view.name.toLowerCase().includes(trimmedQuery) && !identifiers.includes(trimmedQuery)) return false;
 
       switch (filter) {
-        case "lupus-nephritis":
-          return view.hasLupusNephritis;
         case "needs-review":
           return (
             view.primaryAttentionReason === "possible-worsening-renal-pattern" ||
             view.primaryAttentionReason === "requires-review" ||
             view.primaryAttentionReason === "serology-change"
           );
-        case "monitoring-overdue":
-          return view.monitoringStatus === "overdue";
         case "open-tasks":
           return view.openTaskCount > 0;
         case "insufficient-data":
@@ -82,10 +88,17 @@ export function PatientsPage() {
           return true;
       }
     });
-  }, [data, query, filter, includeInactive]);
+
+    return filtered.sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "age") return (b.age ?? -1) - (a.age ?? -1);
+      if (sortBy === "most-tasks") return b.openTaskCount - a.openTaskCount || a.name.localeCompare(b.name);
+      return (b.lastUpdated ?? "").localeCompare(a.lastUpdated ?? "") || a.name.localeCompare(b.name);
+    });
+  }, [data, query, filter, sortBy, includeInactive]);
 
   return (
-    <AppShell title="Patients" subtitle="FHIR-connected patient records">
+    <AppShell title="Patients" subtitle="FHIR-connected COPD patient worklist">
       {loading && (
         <div className="space-y-3">
           {[0, 1, 2, 3].map(i => (
@@ -107,28 +120,23 @@ export function PatientsPage() {
 
       {!loading && !error && data && (
         <>
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="mb-5 flex flex-col gap-3 border-b border-[var(--border)] pb-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name..."
-                className="h-10 w-full min-w-64 max-w-sm"
+                placeholder="Search patients by name or identifier..."
+                className="h-10 w-full min-w-64 flex-1 max-w-md shadow-none"
               />
-              <div className="flex flex-wrap gap-2">
-                {FILTERS.map(f => (
-                  <Button
-                    key={f.value}
-                    size="sm"
-                    variant={filter === f.value ? "default" : "outline"}
-                    aria-pressed={filter === f.value}
-                    onClick={() => setFilter(f.value)}
-                  >
-                    {f.label}
-                  </Button>
-                ))}
-              </div>
-              <label className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-1 text-sm font-medium text-[color:var(--muted-foreground)]">
+              <Select value={filter} onValueChange={value => setFilter(value as PatientFilter)}>
+                <SelectTrigger size="sm" aria-label="Filter by status" className="min-w-36 shadow-none"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>{FILTERS.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={value => setSortBy(value as SortOption)}>
+                <SelectTrigger size="sm" aria-label="Sort patients" className="min-w-36 shadow-none"><SelectValue placeholder="Sort by" /></SelectTrigger>
+                <SelectContent>{SORT_OPTIONS.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+              </Select>
+              <label className="flex min-h-9 cursor-pointer items-center gap-2 px-1 text-sm font-medium text-[color:var(--muted-foreground)]">
                 <input
                   type="checkbox"
                   checked={includeInactive}
@@ -137,7 +145,8 @@ export function PatientsPage() {
                 />
                 Include inactive
               </label>
-              <span className="text-sm font-medium text-[color:var(--muted-foreground)]">{filteredAllPatients.length} patients</span>
+              <Button type="button" variant="ghost" size="sm" className="text-[color:var(--muted-foreground)]" onClick={() => { setQuery(""); setFilter("all"); setSortBy("last-updated"); setIncludeInactive(false); }}>Clear filters</Button>
+              <span className="text-sm font-medium text-[color:var(--muted-foreground)]">{filteredAllPatients.length} COPD patients</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -157,7 +166,7 @@ export function PatientsPage() {
               <CardContent className="text-center text-sm font-medium text-[color:var(--muted-foreground)]">No patients found.</CardContent>
             </Card>
           ) : (
-            <AllPatientsTable patients={filteredAllPatients} onEdit={setEditPatient} onDeactivate={setDeactivateTarget} />
+            <AllPatientsTable patients={filteredAllPatients} quickLooks={{}} onEdit={setEditPatient} onDeactivate={setDeactivateTarget} />
           )}
         </>
       )}

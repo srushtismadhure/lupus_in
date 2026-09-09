@@ -1180,7 +1180,7 @@ export async function handlePortalReport(req: Request): Promise<Response> {
   try {
     const model = buildPatientPortalModel(await loadPatientPortalData(session.patientId));
     const lines = [
-      "LoopedIn patient-friendly care summary",
+      "Waypoint patient-friendly care summary",
       `Patient: ${model.patient.displayName}`,
       `Report date: ${new Date().toLocaleDateString("en-US")}`,
       "",

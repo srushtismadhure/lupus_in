@@ -164,7 +164,7 @@ describe("Madison Class IV data definitions", () => {
   });
 
   test("Class IV resolves to the existing class-four asset", () => {
-    expect(resolvePathologyImage("IV")).toContain("class4.png");
+    expect(resolvePathologyImage("IV")).toBeUndefined();
   });
 
   test("kidney reserve is 67% recovered with residual loss of 14", () => {

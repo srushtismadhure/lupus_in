@@ -1,36 +1,37 @@
 import { LoginForm } from "@/components/auth/LoginForm";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import logo from "@/assets/images/logo.png";
-import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export function LoginPage() {
-  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "Waypoint | COPD Care Transitions";
+    return () => { document.title = previousTitle; };
+  }, []);
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <div className="flex flex-col justify-center gap-6 bg-[var(--brand)] px-10 py-16 text-white md:px-16">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="flex items-center justify-center bg-[var(--brand-navy)] px-6 py-8 text-white sm:px-8 sm:py-10 lg:px-10 lg:py-12 xl:px-16">
+        <div className="w-full max-w-md space-y-4 lg:space-y-5">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="LoopedIn" className="size-10" />
-          <span className="text-lg font-semibold">LoopedIn</span>
+          <img src={logo} alt="Waypoint" className="size-[38px] shrink-0 lg:size-12" />
+          <span className="text-[21px] font-semibold">Waypoint</span>
         </div>
-        <div className="space-y-3">
-          <h1 className="text-3xl font-semibold leading-tight text-[color:var(--card)]">Lupus Nephritis Control Center</h1>
-          <p className="max-w-sm text-sm text-[color:var(--sky-blue)]">
-            FHIR-connected renal monitoring and clinical decision support.
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold leading-tight text-[color:var(--card)] lg:text-4xl">COPD Care Transitions</h1>
+          <p className="max-w-sm text-sm leading-6 text-[color:var(--sky-blue)]">
+            Connecting home-health findings with ambulatory care and pulmonary rehabilitation.
           </p>
+        </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-center bg-[var(--background)] px-6 py-16">
-        <Card className="w-full max-w-sm p-8">
-          <CardHeader className="p-0">
-            <CardTitle className="text-xl text-[color:var(--foreground)]">Explore the LoopedIn Demo</CardTitle>
-            <CardDescription className="text-[color:var(--muted-foreground)]">
-              Review synthetic lupus nephritis records, longitudinal kidney metrics and FHIR-connected clinical
-              workflows.
-            </CardDescription>
+      <div className="flex min-w-0 items-center justify-center bg-background px-4 py-6 sm:px-8 sm:py-8 lg:py-12">
+        <Card className="w-full max-w-md gap-5 rounded-lg p-5 shadow-sm sm:p-6">
+          <CardHeader className="gap-2 p-0">
+            <CardTitle className="text-xl text-[color:var(--foreground)]">Choose your workspace</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {searchParams.get("loggedOut") === "1" && <p role="status" className="mb-4 rounded-lg border border-[var(--mint)] bg-[var(--success-bg)] px-3 py-2 text-sm font-semibold text-[color:var(--success)]">You have been logged out.</p>}
             <LoginForm />
           </CardContent>
         </Card>

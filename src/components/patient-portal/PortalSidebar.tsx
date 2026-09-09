@@ -9,7 +9,7 @@ export function PortalSidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-[var(--brand)] text-white lg:flex" aria-label="Patient portal navigation">
       <div className="flex items-center gap-3 px-6 py-6">
         <img src={logo} alt="" className="size-8" aria-hidden="true" />
-        <div><p className="font-semibold text-[color:var(--card)]">LoopedIn</p><p className="text-xs text-[color:var(--sky-blue)]">Patient portal</p></div>
+        <div><p className="font-semibold text-[color:var(--card)]">Waypoint</p><p className="text-xs text-[color:var(--sky-blue)]">Patient portal</p></div>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
         <ul className="space-y-1">

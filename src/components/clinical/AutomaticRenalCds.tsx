@@ -16,7 +16,7 @@ interface AutomaticRenalCdsProps {
 /**
  * Automatically invokes the luppedin-patient-view CDS service when a clinician opens
  * a patient chart — mirroring how a real EHR (Epic, Cerner, etc.) CDS Client would fire
- * a patient-view hook on chart open. In this demo, the LoopedIn frontend plays that CDS
+ * a patient-view hook on chart open. In this demo, the Waypoint frontend plays that CDS
  * Client role; no EHR is actually connected or triggering anything.
  */
 export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps) {
@@ -72,14 +72,14 @@ export function AutomaticRenalCds({ patientId, userId }: AutomaticRenalCdsProps)
     <Card className="mb-6 border-[var(--info-border)]">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">LoopedIn Clinical CDS — automatic patient-view simulation</CardTitle>
+          <CardTitle className="text-base">Waypoint Clinical CDS — automatic patient-view simulation</CardTitle>
           <Badge variant="purple">Simulated CDS Client</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xs text-[#8592A3]">
-          This panel simulates the CDS Hooks patient-view flow: on chart open, a CDS Client (here, the LoopedIn
-          frontend) automatically calls the LoopedIn CDS service, which evaluates real FHIR data from Medblocks and
+          This panel simulates the CDS Hooks patient-view flow: on chart open, a CDS Client (here, the Waypoint
+          frontend) automatically calls the Waypoint CDS service, which evaluates real FHIR data from Medblocks and
           returns cards. No EHR such as Epic or Cerner is connected in this demo — a production deployment would
           have Epic/Cerner play the CDS Client role instead of this frontend.
         </p>

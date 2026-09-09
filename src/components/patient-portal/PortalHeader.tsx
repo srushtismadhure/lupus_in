@@ -19,8 +19,8 @@ export function PortalHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-[var(--border)] bg-white/95 px-4 py-3 backdrop-blur sm:px-6" aria-label="Patient portal header">
-      <div className="min-w-0 lg:hidden"><p className="truncate font-semibold text-[color:var(--brand)]">LoopedIn</p><p className="text-xs text-[color:var(--muted-foreground)]">Patient portal</p></div>
+    <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-white/95 px-4 py-3 backdrop-blur sm:px-6" aria-label="Patient portal header">
+      <div className="min-w-0 lg:hidden"><p className="truncate font-semibold text-[color:var(--brand)]">Waypoint</p><p className="text-xs text-[color:var(--muted-foreground)]">Patient portal</p></div>
       <div className="hidden min-w-0 lg:block"><p className="text-sm font-semibold text-[color:var(--foreground)]">Your health record</p><p className="text-xs text-[color:var(--muted-foreground)]">Private patient view</p></div>
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" className="min-h-11 min-w-11 px-3"><a href="/portal/messages"><MessageCircle aria-hidden="true" /><span className="hidden sm:inline">Messages</span><span className="sr-only sm:hidden">Messages</span></a></Button>
@@ -37,6 +37,9 @@ export function PortalHeader() {
             <DropdownMenuItem onSelect={() => setDialogMode("logout")} variant="destructive" className="min-h-11"><LogOut aria-hidden="true" />Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button type="button" variant="ghost" className="min-h-11 px-3" onClick={() => setDialogMode("logout")} disabled={busy}>
+          <LogOut aria-hidden="true" />Log out
+        </Button>
       </div>
       <LogoutDialog open={dialogMode !== null} onOpenChange={open => { if (!open) setDialogMode(null); }} onConfirm={endSession} mode={dialogMode ?? "logout"} busy={busy} />
     </header>

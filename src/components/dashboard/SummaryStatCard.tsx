@@ -15,7 +15,7 @@ const ACCENT_DOT: Record<Accent, string> = {
 
 interface SummaryStatCardProps {
   label: string;
-  value: number;
+  value: number | string;
   accent?: Accent;
   actionLabel?: string;
   onAction?: () => void;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Building2, LayoutDashboard, Users, LineChart, Pill, ClipboardList, FlaskConical, ScanSearch } from "lucide-react";
+import { Building2, FileText, House, LayoutDashboard, Users, LineChart, Pill, ClipboardList, ScanSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import logo from "@/assets/images/logo.png";
@@ -36,12 +36,13 @@ export function AppSidebar() {
   const navItems = [
     { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
     { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
-    ...(user?.role === "clinician" ? [{ to: "/sle-systems-review", label: "SLE Systems Review", icon: ScanSearch, enabled: true, end: false }] : []),
-    { to: "#", label: "Renal Trends", icon: LineChart, enabled: false },
+    ...(user?.role === "clinician" ? [{ to: "/sle-systems-review", label: "COPD Review", icon: ScanSearch, enabled: true, end: false }] : []),
+    { to: "#", label: "Respiratory Trends", icon: LineChart, enabled: false },
     { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
-    { to: "/kidney-services", label: "Kidney Services", icon: Building2, enabled: true, end: false },
-    { to: "#", label: "Care Coordination", icon: ClipboardList, enabled: false },
-    { to: "#", label: "Clinical Trials", icon: FlaskConical, enabled: false },
+    { to: "#", label: "Pulmonary Rehab", icon: Building2, enabled: false },
+    { to: "#", label: "Care Transitions", icon: ClipboardList, enabled: false },
+    { to: "#", label: "Home Health Updates", icon: House, enabled: false },
+    { to: "#", label: "Tasks", icon: FileText, enabled: false },
   ];
 
   return (
@@ -49,8 +50,8 @@ export function AppSidebar() {
       <div className="sticky top-0 flex h-screen flex-col justify-between">
         <div>
           <div className="flex items-center justify-center gap-2 px-3 py-5 text-[color:var(--card)] md:justify-start md:px-5">
-            <img src={logo} alt="LoopedIn" className="size-6" />
-            <span className="hidden text-lg font-semibold md:inline">LoopedIn</span>
+            <img src={logo} alt="Waypoint" className="size-6" />
+            <span className="hidden text-lg font-semibold md:inline">Waypoint</span>
           </div>
 
           <nav className="mt-2 flex flex-col gap-0.5 px-3">

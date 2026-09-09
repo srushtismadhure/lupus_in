@@ -15,7 +15,7 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
   return (
     <header className="flex items-center justify-between border-b border-[var(--border)] bg-white/95 px-6 py-4 backdrop-blur">
       <div>
-        <h1 className="text-lg font-semibold text-[color:var(--foreground)]">{title}</h1>
+        <h1 className="text-lg font-bold text-[color:var(--foreground)]">{title}</h1>
         {subtitle && <p className="mt-0.5 text-sm text-[color:var(--muted-foreground)]">{subtitle}</p>}
       </div>
 

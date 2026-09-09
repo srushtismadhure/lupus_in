@@ -21,7 +21,7 @@ export function buildProvenance(input: ReferralReviewInput, targetReferences: st
     },
     agent: [
       { type: { text: "Authorizing clinician" }, who: input.clinician },
-      { type: { text: "Authoring software" }, who: { display: "LoopedIn Care Coordination" } },
+      { type: { text: "Authoring software" }, who: { display: "Waypoint Care Coordination" } },
     ],
     entity: [
       {

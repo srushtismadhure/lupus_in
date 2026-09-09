@@ -22,6 +22,7 @@ export interface WorklistPatientView {
   age?: number;
   gender?: string;
   active: boolean;
+  hasCopd: boolean;
   hasLupusNephritis: boolean;
   primaryConditionText?: string;
   latestUpcr?: WorklistObservationValue;

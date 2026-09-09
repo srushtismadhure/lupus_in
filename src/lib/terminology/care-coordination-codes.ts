@@ -44,5 +44,5 @@ export const CARE_TEAM_ROLE_CODES = {
 } as const;
 
 export const TERMINOLOGY_REVIEW_NOTE =
-  "Local LoopedIn terminology; review and map to institution-approved standard terminology before production use.";
+  "Local Waypoint terminology; review and map to institution-approved standard terminology before production use.";
 
