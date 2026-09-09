@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
+    "typecheck": "bunx tsc --noEmit",
     "build": "bun run build.ts",
     "import:kidney-services": "bun scripts/import-kidney-services.ts",
     "upgrade:madison-class-iv": "bun scripts/upgrade-madison-class-iv.ts",

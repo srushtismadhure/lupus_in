@@ -217,17 +217,22 @@ export async function handleDemoLogin(req: Request): Promise<Response> {
   const role = isDemoRole(body.role) ? body.role : null;
   if (!role) return Response.json({ error: "A valid demo role is required." }, { status: 400 });
 
-  const token = createDemoSessionToken(role);
-  const user = DEMO_USERS[role];
-  const session = verifySessionToken(token);
-  return Response.json(
-    {
-      authenticated: true,
-      user: { email: user.email, displayName: user.displayName, role, patientId: user.patientId },
-      expiresAt: session?.exp,
-    },
-    { status: 200, headers: { "Set-Cookie": buildSessionCookie(token), "Cache-Control": "no-store" } },
-  );
+  try {
+    const token = createDemoSessionToken(role);
+    const user = DEMO_USERS[role];
+    const session = verifySessionToken(token);
+    return Response.json(
+      {
+        authenticated: true,
+        user: { email: user.email, displayName: user.displayName, role, patientId: user.patientId },
+        expiresAt: session?.exp,
+      },
+      { status: 200, headers: { "Set-Cookie": buildSessionCookie(token), "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    console.error("Demo login failed:", error instanceof Error ? error.message : "unknown error");
+    return Response.json({ error: "Demo login is not configured correctly." }, { status: 500 });
+  }
 }
 
 export async function handleLogout(): Promise<Response> {
