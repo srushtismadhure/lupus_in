@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PORTAL_NAVIGATION } from "./portal-navigation";
 
-const PRIMARY_PATHS = new Set(["/portal", "/portal/labs", "/portal/care-plan", "/portal/messages"]);
+const PRIMARY_PATHS = new Set(["/portal", "/portal/symptoms-breathing", "/portal/care-plan", "/portal/medications"]);
 
 export function MobilePortalNavigation() {
   const [open, setOpen] = useState(false);

@@ -20,7 +20,7 @@ import { CareCoordinationPage } from "@/pages/CareCoordinationPage";
 import { SleSystemsReviewPage } from "@/pages/SleSystemsReviewPage";
 import { PortalLayout } from "@/components/patient-portal/PortalLayout";
 import { PortalHomePage } from "@/pages/patient-portal/PortalHomePage";
-import { PortalLupusPage } from "@/pages/patient-portal/PortalLupusPage";
+import { PortalSymptomsBreathingPage } from "@/pages/patient-portal/PortalSymptomsBreathingPage";
 import { PortalLabsPage } from "@/pages/patient-portal/PortalLabsPage";
 import { PortalLabDetailPage } from "@/pages/patient-portal/PortalLabDetailPage";
 import { PortalNutritionPage } from "@/pages/patient-portal/PortalNutritionPage";
@@ -32,6 +32,9 @@ import { PortalCareTeamPage } from "@/pages/patient-portal/PortalCareTeamPage";
 import { PortalDocumentsPage } from "@/pages/patient-portal/PortalDocumentsPage";
 import { PortalProfilePage } from "@/pages/patient-portal/PortalProfilePage";
 import { PortalHelpPage } from "@/pages/patient-portal/PortalHelpPage";
+import { PortalHomeHealthPage } from "@/pages/patient-portal/PortalHomeHealthPage";
+import { PortalPulmonaryRehabPage } from "@/pages/patient-portal/PortalPulmonaryRehabPage";
+import { PortalEducationPage } from "@/pages/patient-portal/PortalEducationPage";
 import { PortalNotFoundPage } from "@/pages/patient-portal/PortalNotFoundPage";
 import "./index.css";
 import { MADISON_GRACE_PATIENT_ID } from "@/lib/madison-class-iv-data";
@@ -89,13 +92,16 @@ export function App() {
           }
         >
           <Route index element={<PortalHomePage />} />
-          <Route path="lupus" element={<PortalLupusPage />} />
+          <Route path="symptoms-breathing" element={<PortalSymptomsBreathingPage />} />
           <Route path="labs" element={<PortalLabsPage />} />
           <Route path="labs/:resultId" element={<PortalLabDetailPage />} />
           <Route path="nutrition" element={<PortalNutritionPage />} />
           <Route path="care-plan" element={<PortalCarePlanPage />} />
           <Route path="appointments" element={<PortalAppointmentsPage />} />
           <Route path="medications" element={<PortalMedicationsPage />} />
+          <Route path="home-health" element={<PortalHomeHealthPage />} />
+          <Route path="pulmonary-rehab" element={<PortalPulmonaryRehabPage />} />
+          <Route path="education" element={<PortalEducationPage />} />
           <Route path="messages" element={<PortalMessagesPage />} />
           <Route path="care-team" element={<PortalCareTeamPage />} />
           <Route path="documents" element={<PortalDocumentsPage />} />
@@ -106,7 +112,7 @@ export function App() {
         <Route
           path="/patients"
           element={
-            <ProtectedRoute allowedRoles={[...STAFF_ROLES]}>
+            <ProtectedRoute allowedRoles={["clinician"]}>
               <PatientsPage />
             </ProtectedRoute>
           }
@@ -146,7 +152,7 @@ export function App() {
         <Route
           path="/patients/:patientId"
           element={
-            <ProtectedRoute allowedRoles={[...STAFF_ROLES]}>
+            <ProtectedRoute allowedRoles={["clinician"]}>
               <PatientDashboardPage />
             </ProtectedRoute>
           }

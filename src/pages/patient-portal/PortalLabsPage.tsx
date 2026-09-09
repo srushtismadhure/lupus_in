@@ -9,11 +9,9 @@ import { usePortalData } from "@/lib/patient-portal/use-portal-data";
 import type { PatientLabCategory } from "@/lib/patient-portal/types";
 
 const GROUPS: Array<{ id: PatientLabCategory; label: string }> = [
-  { id: "kidney-function", label: "Kidney function" },
-  { id: "urine-protein", label: "Urine and protein" },
-  { id: "lupus-activity", label: "Lupus activity" },
+  { id: "respiratory", label: "Breathing measurements" },
+  { id: "oxygen", label: "Oxygen information" },
   { id: "blood-count", label: "Blood counts" },
-  { id: "electrolyte", label: "Electrolytes and minerals" },
   { id: "other", label: "General health monitoring" },
 ];
 
@@ -30,7 +28,7 @@ export function PortalLabsPage() {
   if (error || !data) return <PortalErrorState message={error ?? undefined} onRetry={retry} />;
   return (
     <div>
-      <PortalPageHeader title="My Lab Results" subtitle="See your latest blood and urine results, what they mean, and what happens next." icon={FlaskConical} />
+      <PortalPageHeader title="Health Results" subtitle="See results shared by your care team and what happens next." icon={FlaskConical} />
       <PortalIncompleteData status={data.dataStatus} />
       {data.results.length === 0 ? <PortalEmptyState title="No lab results are available for this section yet." /> : (
         <div className="space-y-7">

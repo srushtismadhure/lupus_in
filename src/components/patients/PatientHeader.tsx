@@ -25,9 +25,9 @@ export function PatientHeader({ patient, conditions, onCreateTask, onAddClinical
   return (
     <Card className="mb-6 flex-row flex-wrap items-start justify-between gap-4 p-5">
       <div>
-        <Button variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={() => navigate("/patients")}>
+        <Button variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={() => navigate(-1)}>
           <ArrowLeft className="size-4" />
-          Back to patients
+          Back to Waypoint
         </Button>
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-xl font-semibold text-foreground">{formatPatientName(patient)}</h2>
@@ -35,7 +35,7 @@ export function PatientHeader({ patient, conditions, onCreateTask, onAddClinical
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {patient.gender ?? "Unknown gender"} · {formatPatientAge(patient) ? `${formatPatientAge(patient)} years` : "Unknown age"} ·{" "}
-          {patient.birthDate ?? "Unknown birth date"} · Synthetic demo patient
+          {patient.birthDate ?? "Unknown birth date"} · FHIR patient record
         </p>
       </div>
 

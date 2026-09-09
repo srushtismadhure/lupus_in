@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
-import { Building2, FileText, House, LayoutDashboard, Users, LineChart, Pill, ClipboardList, ScanSearch } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { Building2, ClipboardList, FileText, House, LayoutDashboard, LineChart, Pill, ScanSearch, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import logo from "@/assets/images/logo.png";
@@ -30,14 +30,15 @@ function useFhirConnectionStatus(): ConnectionStatus {
 export function AppSidebar() {
   const connectionStatus = useFhirConnectionStatus();
   const { user } = useAuth();
+  const location = useLocation();
+  const inPatientContext = /^\/patients\/[^/]+/.test(location.pathname);
 
   const dashboardHome = user?.role === "nurse" ? "/nurse" : "/clinician";
 
   const navItems = user?.role === "nurse"
     ? [
-        { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
-        { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
-        { to: "/nurse/visits", label: "Visits", icon: House, enabled: true, end: false },
+        { to: "/nurse", label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
+        { to: "/nurse/visits", label: "Home Health Visits", icon: House, enabled: true, end: false },
         { to: "/nurse/assessments", label: "Assessments", icon: ClipboardList, enabled: true, end: false },
         { to: "/nurse/medication-reconciliation", label: "Medication Reconciliation", icon: Pill, enabled: true, end: false },
         { to: "#", label: "Care Transitions", icon: Building2, enabled: false },
@@ -64,7 +65,7 @@ export function AppSidebar() {
           </div>
 
           <nav className="mt-2 flex flex-col gap-0.5 px-3">
-            {navItems.map(item =>
+            {navItems.filter(item => !(inPatientContext && item.to === "/patients")).map(item =>
               item.enabled ? (
                 <NavLink
                   key={item.label}

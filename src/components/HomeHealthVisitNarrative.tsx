@@ -1,108 +1,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClinicalNoteDraft, finalizeClinicalNote, saveClinicalNoteDraft } from "@/lib/notes-coding-client";
-import type { ClinicalNoteDraftView } from "@/lib/notes-coding-types";
+import { analyzeClinicalNote, createClinicalNoteDraft, finalizeClinicalNote, saveClinicalNoteDraft } from "@/lib/notes-coding-client";
+import type { ClinicalConceptSuggestion, ClinicalNoteDraftView } from "@/lib/notes-coding-types";
 
-type NarrativeProps = {
-  patientId: string;
-  encounterId?: string;
-  transcript: string;
-  onExtract: () => void;
-  onLoadDemo: () => void;
-  onStartRecording: () => void;
-  onStopRecording: () => void;
-  onTranscribe: () => void;
-  recording: boolean;
-  transcribing: boolean;
-};
+export type HomeHealthCandidate = { targetQuestionnaire?: "copd" | "oasis"; linkId?: string; label?: string; finding?: string; candidateValue?: unknown; evidenceText?: string; reviewStatus?: "pending" | "confirmed" | "rejected" };
+type NarrativeProps = { patientId: string; encounterId?: string; transcript: string; onTranscriptChange: (value: string) => void; onLoadDemo: () => void; onStartRecording: () => void; onStopRecording: () => void; onStartDictation: () => void; onStopDictation: () => void; onTranscribe: () => void; recording: boolean; dictating: boolean; transcribing: boolean; liveTranscript: string; interimTranscript: string; liveTranscriptionSupported: boolean; liveTranscriptionError: string | null; findings: HomeHealthCandidate[]; onConfirmCandidate: (candidate: HomeHealthCandidate, editedValue?: string) => void; onRejectCandidate: (candidate: HomeHealthCandidate) => void };
+const SECTION_LABELS = ["Reason for visit", "Interval history / clinical history", "Respiratory assessment", "Medication reconciliation", "Functional assessment", "Home / social context", "Skilled nursing interventions", "Patient/caregiver response", "Clinical assessment / significant findings", "Plan"] as const;
+function evidence(transcript: string, patterns: RegExp[]): string { return transcript.split(/\n+/).map(line => line.trim()).filter(Boolean).filter(line => patterns.some(pattern => pattern.test(line))).join("\n"); }
+export function draftVisitNote(transcript: string): string { const sections: Record<(typeof SECTION_LABELS)[number], string> = { "Reason for visit": evidence(transcript, [/visit|home|follow-up/i]), "Interval history / clinical history": evidence(transcript, [/since|discharge|hospital|ED|worse|better|change/i]), "Respiratory assessment": evidence(transcript, [/breath|dyspnea|cough|sputum|wheez|oxygen|liters|respirat/i]), "Medication reconciliation": evidence(transcript, [/medication|inhaler|ran out|taking|missed|refill|afford/i]), "Functional assessment": evidence(transcript, [/walk|kitchen|activity|stairs|ADL|tolerance|assist/i]), "Home / social context": evidence(transcript, [/daughter|caregiver|transport|equipment|home|follow-up|available/i]), "Skilled nursing interventions": evidence(transcript, [/teach|education|review|coordinate|notify|assess/i]), "Patient/caregiver response": evidence(transcript, [/patient|daughter|understand|agree|response/i]), "Clinical assessment / significant findings": evidence(transcript, [/worse|symptom|finding|concern|baseline/i]), Plan: evidence(transcript, [/plan|follow-up|pulmonology|rehab|next|schedule|escalat/i]) }; return SECTION_LABELS.map(label => `${label}\n${sections[label]}`).join("\n\n"); }
 
-const SECTION_LABELS = [
-  "Reason for visit",
-  "Interval history / clinical history",
-  "Respiratory assessment",
-  "Medication reconciliation",
-  "Functional assessment",
-  "Home / social context",
-  "Skilled nursing interventions",
-  "Patient/caregiver response",
-  "Clinical assessment / significant findings",
-  "Plan",
-] as const;
-
-function evidence(transcript: string, patterns: RegExp[]): string {
-  const lines = transcript.split(/\n+/).map(line => line.trim()).filter(Boolean);
-  return lines.filter(line => patterns.some(pattern => pattern.test(line))).join("\n");
+export function HomeHealthVisitNarrative({ patientId, encounterId, transcript, onTranscriptChange, onLoadDemo, onStartRecording, onStopRecording, onStartDictation, onStopDictation, onTranscribe, recording, dictating, transcribing, liveTranscript, interimTranscript, liveTranscriptionSupported, liveTranscriptionError, findings, onConfirmCandidate, onRejectCandidate }: NarrativeProps) {
+  const [summary, setSummary] = useState(""); const [draft, setDraft] = useState<ClinicalNoteDraftView | null>(null); const [concepts, setConcepts] = useState<ClinicalConceptSuggestion[]>([]); const [busy, setBusy] = useState(false); const [message, setMessage] = useState<string | null>(null);
+  function generateSummary() { if (!transcript.trim()) return setMessage("Review or transcribe the visit before generating a summary."); setSummary(draftVisitNote(transcript)); setMessage("Draft generated from the transcript. Review every section before saving."); }
+  async function analyzeSummary() { if (!summary.trim()) return setMessage("Generate or enter a clinical summary first."); setBusy(true); setMessage(null); try { const result = await analyzeClinicalNote(patientId, { noteText: summary, encounterId, noteDate: new Date().toISOString(), author: "Waypoint Home Health RN", noteType: "Home Health Nursing Visit Note" }); setDraft(result.draft); setConcepts(result.concepts); setMessage("Notes & Coding candidates are ready for clinician review. No clinical facts were written."); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to analyze the clinical summary."); } finally { setBusy(false); } }
+  async function save() { if (!summary.trim()) return setMessage("Generate or enter a clinical summary first."); setBusy(true); try { const input = { noteText: summary, encounterId, noteDate: new Date().toISOString(), author: "Waypoint Home Health RN", noteType: "Home Health Nursing Visit Note", status: "draft" as const }; setDraft(draft ? await saveClinicalNoteDraft(draft.draftId, input) : await createClinicalNoteDraft(patientId, input)); setMessage("Clinical summary saved as a draft. It is not finalized."); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to save the clinical summary."); } finally { setBusy(false); } }
+  async function finalize() { if (!draft) return setMessage("Save the reviewed summary before finalizing."); setBusy(true); try { setDraft(await finalizeClinicalNote(draft.draftId)); setMessage("Final clinical note finalized and persisted as a FHIR DocumentReference."); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to finalize the clinical note."); } finally { setBusy(false); } }
+  const liveText = `${liveTranscript}${interimTranscript ? ` ${interimTranscript}` : ""}`.trim();
+  return <Card className="shadow-none" id="clinical-note"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Clinical Summary &amp; Ambient Documentation</CardTitle>{draft?.status === "finalized" && <span className="text-sm text-emerald-700">Finalized</span>}</div><p className="text-sm text-[color:var(--muted-foreground)]">MediaRecorder and final server transcription remain authoritative. Live browser words are display-only.</p></CardHeader><CardContent className="space-y-4"><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={onLoadDemo}>Load Synthetic Demo Conversation</Button>{!recording && !dictating ? <Button onClick={onStartRecording}>Start Recording</Button> : <Button onClick={recording ? onStopRecording : onStopDictation}>Stop {recording ? "Recording" : "Dictation"}</Button>}{!recording && !dictating && <Button variant="outline" onClick={onStartDictation}>Dictate Clinical Note</Button>}{!recording && !dictating && <Button onClick={onTranscribe} disabled={transcribing || !transcript.trim()}>{transcribing ? "Processing final transcript..." : "Transcribe Visit"}</Button>}</div>{(recording || dictating) && <div className="rounded-md border border-[var(--border)] bg-[var(--info-bg)] p-4" aria-live="polite"><p className="text-sm font-semibold text-[color:var(--link)]">● {recording ? "Recording" : "Dictating"} · {liveTranscriptionSupported ? "Live transcription active" : "Final transcription available after stop"}</p><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--muted-foreground)]">Live transcript</p>{liveTranscriptionSupported ? <p className="mt-1 min-h-10 text-sm leading-6"><span>{liveTranscript}</span><span className="text-[color:var(--muted-foreground)] italic">{interimTranscript ? ` ${interimTranscript}` : ""}</span>{!liveText && <span className="text-[color:var(--muted-foreground)]">Listening...</span>}</p> : <p className="mt-1 text-sm leading-6 text-[color:var(--muted-foreground)]">Live transcription is unavailable in this browser. The visit is still being recorded and will be transcribed after recording stops.</p>}{liveTranscriptionError && <p className="mt-2 text-xs text-red-700">{liveTranscriptionError}</p>}</div>}{transcribing && <p className="rounded-md bg-[var(--info-bg)] p-3 text-sm text-[color:var(--link)]">Processing final transcript...</p>}<label className="block text-sm font-medium" htmlFor="visit-transcript">Reviewed visit transcript</label><textarea id="visit-transcript" value={transcript} onChange={event => onTranscriptChange(event.target.value)} className="min-h-36 w-full rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 text-sm" placeholder="Load, transcribe, or dictate a visit." /><Button onClick={generateSummary} disabled={!transcript.trim()}>Generate Clinical Summary</Button><label className="block text-sm font-medium" htmlFor="visit-note-draft">Clinical summary</label><textarea id="visit-note-draft" value={summary} onChange={event => setSummary(event.target.value)} disabled={draft?.status === "finalized"} className="min-h-64 w-full rounded-md border border-[var(--border)] p-3 text-sm leading-6" placeholder="The reviewed summary will appear here, organized by clinical section." /><div className="flex flex-wrap gap-2"><Button onClick={analyzeSummary} disabled={busy || !summary.trim()}>Analyze with Notes &amp; Coding</Button><Button variant="outline" onClick={save} disabled={busy || draft?.status === "finalized"}>Save Draft</Button><Button variant="outline" onClick={finalize} disabled={busy || !draft || draft.status === "finalized"}>Approve / Finalize Note</Button></div>{findings.length > 0 && <div className="space-y-3"><h3 className="text-base font-semibold">Candidate findings for nurse review</h3>{findings.map((candidate, index) => <CandidateCard key={`${candidate.linkId ?? candidate.finding}-${index}`} candidate={candidate} onConfirm={onConfirmCandidate} onReject={onRejectCandidate} />)}</div>}{concepts.length > 0 && <div className="space-y-2"><h3 className="text-base font-semibold">Notes &amp; Coding concepts</h3>{concepts.map(concept => <p key={concept.id} className="rounded-md border p-2 text-sm">{concept.normalizedConcept} · {concept.category} · {concept.clinicianDecision?.status ?? "pending review"}</p>)}</div>}{draft && <span className="text-xs text-[color:var(--muted-foreground)]">Source note: FHIR {draft.fhirReference}; clinician confirmation required</span>}{message && <p role="status" className="text-sm">{message}</p>}</CardContent></Card>;
 }
-
-export function draftVisitNote(transcript: string): string {
-  const sections: Record<(typeof SECTION_LABELS)[number], string> = {
-    "Reason for visit": evidence(transcript, [/visit|home|follow-up/i]),
-    "Interval history / clinical history": evidence(transcript, [/since|discharge|hospital|ED|worse|better|change/i]),
-    "Respiratory assessment": evidence(transcript, [/breath|dyspnea|cough|sputum|wheez|oxygen|liters|respirat/i]),
-    "Medication reconciliation": evidence(transcript, [/medication|inhaler|ran out|taking|missed|refill|afford/i]),
-    "Functional assessment": evidence(transcript, [/walk|kitchen|activity|stairs|ADL|tolerance|assist/i]),
-    "Home / social context": evidence(transcript, [/daughter|caregiver|transport|equipment|home|follow-up|available/i]),
-    "Skilled nursing interventions": evidence(transcript, [/teach|education|review|coordinate|notify|assess/i]),
-    "Patient/caregiver response": evidence(transcript, [/patient|daughter|understand|agree|response/i]),
-    "Clinical assessment / significant findings": evidence(transcript, [/worse|symptom|finding|concern|baseline/i]),
-    Plan: evidence(transcript, [/plan|follow-up|pulmonology|rehab|next|schedule|escalat/i]),
-  };
-  return SECTION_LABELS.map(label => `${label}\n${sections[label]}`).join("\n\n");
-}
-
-export function HomeHealthVisitNarrative({ patientId, encounterId, transcript, onExtract, onLoadDemo, onStartRecording, onStopRecording, onTranscribe, recording, transcribing }: NarrativeProps) {
-  const [noteText, setNoteText] = useState("");
-  const [draft, setDraft] = useState<ClinicalNoteDraftView | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  function generate() {
-    if (!transcript.trim()) return setMessage("Load or transcribe a visit before generating the note.");
-    setNoteText(draftVisitNote(transcript));
-    setMessage("Draft generated from the transcript. Review every section before saving.");
-    onExtract();
-  }
-
-  async function save() {
-    if (!noteText.trim()) return setMessage("Generate or enter a visit note first.");
-    setBusy(true); setMessage(null);
-    try {
-      const input = { noteText, encounterId, noteDate: new Date().toISOString(), author: "Waypoint Home Health RN", noteType: "Home Health Nursing Visit Note", status: "draft" as const };
-      const next = draft ? await saveClinicalNoteDraft(draft.draftId, input) : await createClinicalNoteDraft(patientId, input);
-      setDraft(next); setMessage("Draft saved for nurse review. It is not finalized.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to save the note draft."); }
-    finally { setBusy(false); }
-  }
-
-  async function finalize() {
-    if (!draft) return setMessage("Save the reviewed draft before finalizing.");
-    setBusy(true); setMessage(null);
-    try { setDraft(await finalizeClinicalNote(draft.draftId)); setMessage("Final clinical note finalized and persisted as a FHIR DocumentReference."); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Unable to finalize the clinical note."); }
-    finally { setBusy(false); }
-  }
-
-  return <Card className="shadow-none" id="clinical-note">
-    <CardHeader>
-      <div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Home Health Nursing Visit Note</CardTitle>{draft?.status === "finalized" && <span className="text-sm text-emerald-700">Finalized</span>}</div>
-      <p className="text-sm text-[color:var(--muted-foreground)]">Narrative documentation is separate from the CMS OASIS-E2 assessment. AI-generated draft — nurse review required.</p>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={onLoadDemo}>Load Synthetic Demo Conversation</Button>
-        {!recording ? <Button onClick={onStartRecording}>Start Recording</Button> : <Button onClick={onStopRecording}>Stop Recording</Button>}
-        <Button variant="outline" onClick={onStartRecording}>Dictate Clinical Note</Button>
-        <Button onClick={onTranscribe} disabled={!transcript.trim() || transcribing}>Transcribe Visit</Button>
-      </div>
-      {transcribing && <p className="text-sm">Transcribing visit...</p>}
-      <label className="block text-sm font-medium" htmlFor="visit-transcript">VISIT TRANSCRIPT</label>
-      <textarea id="visit-transcript" value={transcript} readOnly className="min-h-36 w-full rounded-md border border-[var(--border)] bg-[var(--bg-muted)] p-3 text-sm" placeholder="Load a synthetic conversation or record the visit." />
-      <Button onClick={generate} disabled={!transcript.trim()}>Generate Draft Visit Note + Extract Structured Findings</Button>
-      <label className="block text-sm font-medium" htmlFor="visit-note-draft">Draft nursing narrative</label>
-      <textarea id="visit-note-draft" value={noteText} onChange={event => setNoteText(event.target.value)} disabled={draft?.status === "finalized"} className="min-h-[32rem] w-full rounded-md border border-[var(--border)] p-3 text-sm leading-6" placeholder="The reviewed narrative will appear here, organized by clinical section." />
-      <div className="flex flex-wrap items-center gap-2"><Button onClick={save} disabled={busy || draft?.status === "finalized"}>{busy ? "Saving..." : "Save Draft"}</Button><Button variant="outline" onClick={finalize} disabled={busy || !draft || draft.status === "finalized"}>Approve / Finalize Note</Button>{draft && <span className="text-xs text-[color:var(--muted-foreground)]">FHIR {draft.fhirReference}; clinician confirmation required</span>}</div>
-      {message && <p role="status" className="text-sm">{message}</p>}
-    </CardContent>
-  </Card>;
-}
+function CandidateCard({ candidate, onConfirm, onReject }: { candidate: HomeHealthCandidate; onConfirm: (candidate: HomeHealthCandidate, editedValue?: string) => void; onReject: (candidate: HomeHealthCandidate) => void }) { const [editedValue, setEditedValue] = useState(String(candidate.candidateValue ?? candidate.finding ?? "")); const confirmed = candidate.reviewStatus === "confirmed"; return <div className="rounded-md border border-[var(--border)] p-3 text-sm"><div className="grid gap-2 sm:grid-cols-2"><div><p className="font-medium">Finding</p><p>{candidate.label ?? candidate.finding ?? candidate.linkId ?? "Clinical finding"}</p></div><label><span className="font-medium">Suggested value</span><input value={editedValue} onChange={event => setEditedValue(event.target.value)} disabled={confirmed} className="mt-1 h-9 w-full rounded-md border px-2" /></label></div><p className="mt-2 text-[color:var(--muted-foreground)]">Evidence: {candidate.evidenceText ?? "No evidence excerpt returned."}</p><p className="mt-1 text-xs text-[color:var(--muted-foreground)]">FHIR destination: {candidate.targetQuestionnaire === "oasis" ? "COPD/OASIS QuestionnaireResponse" : "Observation or MedicationStatement"} · Status: {candidate.reviewStatus ?? "pending"}</p>{!confirmed && <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => onConfirm(candidate, editedValue)}>Confirm / Edit</Button><Button size="sm" variant="outline" onClick={() => onReject(candidate)}>Reject</Button></div>}</div>; }

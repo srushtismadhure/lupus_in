@@ -20,13 +20,20 @@ export function buildDashboardSummary(input: {
   medications: PatientMedication[];
   messages: PatientMessageSummary[];
   coordinator: string;
-  lupusAreasMonitored: number;
+  observations: fhir4.Observation[];
+  conditions: fhir4.Condition[];
+  encounters: fhir4.Encounter[];
+  tasks: fhir4.Task[];
+  serviceRequests: fhir4.ServiceRequest[];
   now?: Date;
 }): PatientDashboardSummary {
   const now = input.now ?? new Date();
-  const egfr = input.labs.find(lab => lab.plainLanguageName === "Estimated kidney filtering rate");
-  const creatinine = input.labs.find(lab => lab.plainLanguageName === "Creatinine");
-  const upcr = input.labs.find(lab => lab.plainLanguageName === "Urine protein-to-creatinine ratio");
+  const latestObservation = (code: string): fhir4.Observation | undefined => input.observations.filter(item => item.code?.coding?.some(coding => coding.code === code)).sort((a, b) => (b.effectiveDateTime ?? "").localeCompare(a.effectiveDateTime ?? ""))[0];
+  const value = (observation?: fhir4.Observation): string | undefined => observation?.valueQuantity?.value !== undefined ? `${observation.valueQuantity.value}${observation.valueQuantity.unit ? ` ${observation.valueQuantity.unit}` : ""}` : observation?.valueString ?? observation?.valueCodeableConcept?.text;
+  const spO2 = latestObservation("59408-5");
+  const respiratoryRate = latestObservation("9279-1");
+  const fev1Fvc = latestObservation("19926-5");
+  const fev1Percent = latestObservation("19868-9");
   const upcoming = input.appointments.filter(appointment => !appointment.past && appointment.status !== "cancelled");
   const nextAppointment = upcoming[0];
   const activePathways = input.carePlan.filter(pathway => !["completed", "closed", "declined"].includes(pathway.status));
@@ -51,22 +58,26 @@ export function buildDashboardSummary(input: {
       });
     }
   }
-  const latestDate = [egfr?.date, creatinine?.date, upcr?.date].filter((value): value is string => Boolean(value)).sort().pop();
-  const completeKidneySet = Boolean(egfr && creatinine && upcr);
+  const copdCondition = input.conditions.some(condition => /copd|chronic obstructive pulmonary disease/i.test(`${condition.code?.text ?? ""} ${condition.code?.coding?.map(coding => `${coding.display ?? ""} ${coding.code ?? ""}`).join(" ") ?? ""}`));
+  const exacerbations = input.encounters.filter(encounter => /exacerbation|emergency|hospital/i.test(`${encounter.reasonCode?.map(reason => reason.text).join(" ") ?? ""} ${encounter.type?.map(type => type.text).join(" ") ?? ""}`));
+  const homeHealth = input.encounters.some(encounter => encounter.class?.code === "HH") ? "Active" : "Not available";
+  const pulmonaryRehab = input.serviceRequests.some(request => /pulmonary rehab/i.test(`${request.code?.text ?? ""} ${request.reasonCode?.map(reason => reason.text).join(" ") ?? ""}`)) ? "Referral listed" : "Not available";
 
   return {
     today: nextSteps.slice(0, 3),
-    kidneyHealth: {
-      latestDate,
-      egfr: formattedLab(egfr),
-      creatinine: formattedLab(creatinine),
-      urineProtein: formattedLab(upcr),
-      status: completeKidneySet ? "Recent kidney results are available for review." : "Some kidney monitoring information is not available.",
+    copdStatus: {
+      diagnosis: copdCondition ? "COPD diagnosis documented" : "No COPD diagnosis found in available record.",
+      fev1Fvc: value(fev1Fvc),
+      fev1PercentPredicted: value(fev1Percent),
+      airflowLimitation: value(fev1Percent) ? "Review with your care team" : "Not available",
     },
-    lupusOverview: {
-      areasMonitored: input.lupusAreasMonitored,
-      followUpStatus: activePathways.length > 0 ? "Follow-up steps are listed in your care plan." : "No next step is currently listed in the available care plan.",
+    respiratoryStatus: {
+      latestSpO2: value(spO2),
+      respiratoryRate: value(respiratoryRate),
+      trend: "Not available",
     },
+    exacerbations: { summary: exacerbations.length ? `${exacerbations.length} documented in available record` : "Not available", recentCount: exacerbations.length, hospitalizations: input.encounters.filter(encounter => encounter.class?.code === "IMP").length },
+    currentCare: { homeHealth, pulmonaryRehab, openTasks: input.tasks.filter(task => !["completed", "cancelled"].includes(task.status)).length, nextAppointment },
     nextAppointment,
     carePlan: {
       activeSteps: activePathways.length,

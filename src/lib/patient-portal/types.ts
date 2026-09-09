@@ -1,9 +1,7 @@
 export type PatientLabCategory =
-  | "kidney-function"
-  | "urine-protein"
-  | "lupus-activity"
+  | "respiratory"
+  | "oxygen"
   | "blood-count"
-  | "electrolyte"
   | "other";
 
 export type PatientLabTrend = "improving" | "worsening" | "stable" | "changing" | "insufficient-data" | "not-applicable";
@@ -175,14 +173,21 @@ export interface PatientNextStep {
 
 export interface PatientDashboardSummary {
   today: PatientNextStep[];
-  kidneyHealth: {
-    latestDate?: string;
-    egfr?: string;
-    creatinine?: string;
-    urineProtein?: string;
-    status: string;
+  copdStatus: {
+    diagnosis: string;
+    fev1Fvc?: string;
+    fev1PercentPredicted?: string;
+    airflowLimitation: string;
   };
-  lupusOverview: { areasMonitored: number; followUpStatus: string };
+  respiratoryStatus: {
+    oxygenUse?: string;
+    latestSpO2?: string;
+    respiratoryRate?: string;
+    dyspnea?: string;
+    trend: string;
+  };
+  exacerbations: { summary: string; recentCount: number; hospitalizations: number };
+  currentCare: { homeHealth: string; pulmonaryRehab: string; openTasks: number; nextAppointment?: PatientAppointment };
   nextAppointment?: PatientAppointment;
   carePlan: { activeSteps: number; nextAction: string; coordinator: string };
   medications: { activeCount: number; monitoringItems: number };
@@ -192,7 +197,6 @@ export interface PatientDashboardSummary {
 export interface PatientPortalModel {
   patient: PatientIdentity;
   dashboard: PatientDashboardSummary;
-  lupusOverview: LupusSystemOverview[];
   labs: PatientFriendlyLabResult[];
   nutrition: NutritionGuidance[];
   mealIdeas: Array<{ id: string; title: string }>;

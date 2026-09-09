@@ -74,6 +74,7 @@ import {
   handleSubmitSleSystemAssessment,
   handleCreateSleSystemTask,
   handleTranscribeHomeHealthVisit,
+  handleRealtimeHomeHealthVisit,
   handleExtractHomeHealthFindings,
   handleConfirmHomeHealthFinding,
 } from "./handlers.js";
@@ -216,6 +217,10 @@ export async function handleRequest(req: Request): Promise<Response> {
   if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "transcribe") {
     if (method !== "POST") return jsonError("Method not allowed", 405);
     return handleTranscribeHomeHealthVisit(req, segments[2]!);
+  }
+  if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "realtime") {
+    if (method !== "POST") return jsonError("Method not allowed", 405);
+    return handleRealtimeHomeHealthVisit(req, segments[2]!);
   }
   if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "extract") {
     if (method !== "POST") return jsonError("Method not allowed", 405);

@@ -1,5 +1,4 @@
 import type {
-  LupusSystemOverview,
   NutritionGuidance,
   PatientAppointment,
   PatientCarePathway,
@@ -24,7 +23,7 @@ export interface PortalBaseResponse {
 }
 
 export type PortalSummaryResponse = PortalBaseResponse & { dashboard: PatientDashboardSummary };
-export type PortalLupusResponse = PortalBaseResponse & { systems: LupusSystemOverview[] };
+export type PortalBreathingResponse = PortalBaseResponse & { results: PatientFriendlyLabResult[] };
 export type PortalLabsResponse = PortalBaseResponse & { results: PatientFriendlyLabResult[] };
 export type PortalLabResponse = PortalBaseResponse & { result: PatientFriendlyLabResult };
 export type PortalNutritionResponse = PortalBaseResponse & {
@@ -55,7 +54,7 @@ async function portalRequest<T>(path: string, init?: { method?: string; body?: u
 }
 
 export function getPortalSummary() { return portalRequest<PortalSummaryResponse>("summary"); }
-export function getPortalLupus() { return portalRequest<PortalLupusResponse>("lupus"); }
+export function getPortalBreathing() { return portalRequest<PortalBreathingResponse>("labs"); }
 export function getPortalLabs() { return portalRequest<PortalLabsResponse>("labs"); }
 export function getPortalLab(resultId: string) { return portalRequest<PortalLabResponse>(`labs/${encodeURIComponent(resultId)}`); }
 export function getPortalNutrition() { return portalRequest<PortalNutritionResponse>("nutrition"); }

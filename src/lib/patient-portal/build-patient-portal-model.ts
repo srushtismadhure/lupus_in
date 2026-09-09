@@ -5,7 +5,6 @@ import { normalizeCarePlan } from "./normalize-care-plan.js";
 import { normalizeCareTeamForPortal } from "./normalize-care-team.js";
 import { normalizeDocuments } from "./normalize-documents.js";
 import { normalizeLabs } from "./normalize-labs.js";
-import { normalizeLupusOverview } from "./normalize-lupus.js";
 import { normalizeMedications } from "./normalize-medications.js";
 import { normalizePatientMessages } from "./normalize-messages.js";
 import { buildNutritionGuidance } from "./nutrition/nutrition-guidance-rules.js";
@@ -27,7 +26,6 @@ export function buildPatientPortalModel(raw: PatientPortalRawData, now = new Dat
   const careTeam = normalizeCareTeamForPortal(raw.careCoordination);
   const messages = normalizePatientMessages(raw.communications, raw.patient.id ?? "");
   const documents = normalizeDocuments(raw.documentReferences);
-  const lupusOverview = normalizeLupusOverview(raw.conditions, labs, medications.filter(item => item.status === "active").length);
   const nutritionContext = normalizeNutritionContext({
     conditions: raw.conditions,
     observations: raw.observations,
@@ -44,8 +42,7 @@ export function buildPatientPortalModel(raw: PatientPortalRawData, now = new Dat
     .sort()
     .pop() ?? now.toISOString();
   const incompleteSections: string[] = [];
-  if (!labs.some(item => item.category === "kidney-function")) incompleteSections.push("Kidney-function laboratory results");
-  if (!labs.some(item => item.category === "blood-count")) incompleteSections.push("Blood-count results");
+  if (!labs.some(item => item.category === "respiratory" || item.category === "oxygen")) incompleteSections.push("Respiratory measurements");
   if (careTeam.length === 0) incompleteSections.push("Care team");
   if (appointments.length === 0) incompleteSections.push("Appointments");
 
@@ -58,10 +55,13 @@ export function buildPatientPortalModel(raw: PatientPortalRawData, now = new Dat
       medications,
       messages,
       coordinator: raw.careCoordination.assignedCoordinator,
-      lupusAreasMonitored: lupusOverview.filter(item => item.status !== "insufficient-information").length,
+      observations: raw.observations,
+      conditions: raw.conditions,
+      encounters: raw.encounters,
+      tasks: raw.tasks,
+      serviceRequests: raw.serviceRequests,
       now,
     }),
-    lupusOverview,
     labs,
     nutrition,
     mealIdeas: filterMealTemplates(nutritionContext.allergies),

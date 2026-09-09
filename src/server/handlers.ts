@@ -418,6 +418,36 @@ export async function handleTranscribeHomeHealthVisit(req: Request, visitId: str
   }
 }
 
+export async function handleRealtimeHomeHealthVisit(req: Request, visitId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return Response.json({ error: "OPENAI_API_KEY is not configured on the server." }, { status: 503 });
+  const sdp = await req.text();
+  if (!sdp.trim()) return Response.json({ error: "A WebRTC SDP offer is required." }, { status: 400 });
+  const sessionConfig = {
+    type: "realtime",
+    model: "gpt-realtime-2.1",
+    audio: {
+      input: {
+        transcription: { model: "gpt-live-transcribe", languages: ["en"], delay: "low" },
+        turn_detection: { type: "server_vad" },
+      },
+    },
+  };
+  try {
+    const form = new FormData();
+    form.set("sdp", sdp);
+    form.set("session", JSON.stringify(sessionConfig));
+    const response = await fetch("https://api.openai.com/v1/realtime/calls", { method: "POST", headers: { Authorization: `Bearer ${apiKey}` }, body: form });
+    const answer = await response.text();
+    if (!response.ok) return new Response(answer || "Realtime session creation failed.", { status: response.status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    return new Response(answer, { status: 200, headers: { "Content-Type": "application/sdp" } });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Realtime transcription could not start." }, { status: 502 });
+  }
+}
+
 export async function handleExtractHomeHealthFindings(req: Request, visitId: string): Promise<Response> {
   const session = requireRole(req, "nurse", "clinician");
   if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
@@ -1191,7 +1221,7 @@ export async function handleGetPortalSection(req: Request, section: PortalSectio
   try {
     const model = buildPatientPortalModel(await loadPatientPortalData(session.patientId));
     if (section === "summary") return noStoreJson({ patient: model.patient, dashboard: model.dashboard, dataStatus: model.dataStatus });
-    if (section === "lupus") return noStoreJson({ patient: model.patient, systems: model.lupusOverview, dataStatus: model.dataStatus });
+    if (section === "lupus") return noStoreJson({ error: "This patient portal section is no longer available." }, 404);
     if (section === "labs") {
       if (!resultId) return noStoreJson({ patient: model.patient, results: model.labs, dataStatus: model.dataStatus });
       const result = model.labs.find(item => item.id === resultId);
