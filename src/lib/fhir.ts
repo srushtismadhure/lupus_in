@@ -171,4 +171,13 @@ export async function createQuestionnaireResponse(response: fhir4.QuestionnaireR
   return resource as fhir4.QuestionnaireResponse;
 }
 
+export async function updateQuestionnaireResponse(id: string, response: fhir4.QuestionnaireResponse): Promise<fhir4.QuestionnaireResponse> {
+  const resource = await fhirFetch(`/QuestionnaireResponse/${encodeURIComponent(id)}`, { method: "PUT", body: { ...response, id } });
+  return resource as fhir4.QuestionnaireResponse;
+}
+
+export async function saveQuestionnaireResponse(response: fhir4.QuestionnaireResponse): Promise<fhir4.QuestionnaireResponse> {
+  return response.id ? updateQuestionnaireResponse(response.id, response) : createQuestionnaireResponse(response);
+}
+
 export { FhirRequestError, referencesPatient };

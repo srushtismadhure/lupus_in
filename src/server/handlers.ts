@@ -9,6 +9,7 @@
  */
 import { getFhirConfig } from "../lib/fhir-config.js";
 import OpenAI from "openai";
+import { extractOasisCandidates } from "../lib/oasis/extract.server";
 import {
   buildClearedSessionCookie,
   buildSessionCookie,
@@ -422,8 +423,9 @@ export async function handleExtractHomeHealthFindings(req: Request, visitId: str
   if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return Response.json({ error: "OPENAI_API_KEY is not configured on the server." }, { status: 503 });
-  const parsed = await readJsonBody<{ transcript?: string }>(req);
+  const parsed = await readJsonBody<{ transcript?: string; targetQuestionnaire?: string; assessment?: unknown }>(req);
   if (!parsed.ok) return parsed.response;
+  if (parsed.body.targetQuestionnaire === "oasis-e2") return extractOasisCandidates(parsed.body, visitId, apiKey);
   if (!parsed.body.transcript?.trim()) return Response.json({ error: "A reviewed transcript is required." }, { status: 400 });
   const response = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.OPENAI_MODEL ?? "gpt-4o-mini", input: [{ role: "system", content: "Extract candidate COPD home-health findings only. Never finalize clinical facts. Return JSON with findings, each having category, finding, evidenceText, and status candidate." }, { role: "user", content: parsed.body.transcript }], text: { format: { type: "json_object" } } }) });
   const body = (await response.json().catch(() => null)) as { output_text?: string; error?: { message?: string } } | null;
