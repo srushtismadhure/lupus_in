@@ -4,12 +4,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SummaryStatCard } from "@/components/dashboard/SummaryStatCard";
-import { MntReferralQueueTable } from "@/components/dashboard/MntReferralQueueTable";
-import { getNurseMntWorklist } from "@/lib/mnt-client";
-import type { MntWorklistResponse } from "@/lib/mnt-types";
+import { AllPatientsTable } from "@/components/dashboard/AllPatientsTable";
+import { getClinicianWorklist } from "@/lib/worklist-client";
+import type { ClinicianWorklistResponse } from "@/lib/worklist-types";
 
 export function NurseDashboardPage() {
-  const [data, setData] = useState<MntWorklistResponse | null>(null);
+  const [data, setData] = useState<ClinicianWorklistResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -18,10 +18,10 @@ export function NurseDashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const worklist = await getNurseMntWorklist();
+      const worklist = await getClinicianWorklist();
       setData(worklist);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to load the MNT referral worklist.");
+      setError(err instanceof Error ? err.message : "Unable to load the home-health worklist.");
     } finally {
       setLoading(false);
     }
@@ -33,8 +33,8 @@ export function NurseDashboardPage() {
 
   return (
     <AppShell
-      title="Waypoint — Care Coordination"
-      subtitle="Medical nutrition therapy referral workflow and outreach queue."
+      title="Home Health"
+      subtitle="COPD home-health visits, assessments, and care transitions."
     >
       <div className="mb-5 flex items-center justify-end">
         <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)} disabled={loading}>
@@ -67,18 +67,21 @@ export function NurseDashboardPage() {
 
       {!loading && !error && data && (
         <>
-          <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <SummaryStatCard label="Awaiting signature" value={data.summary.awaitingSignature} accent="amber" />
-            <SummaryStatCard label="Awaiting scheduling" value={data.summary.approvedAwaitingScheduling} accent="purple" />
-            <SummaryStatCard label="Not yet contacted" value={data.summary.notContacted} accent="red" />
-            <SummaryStatCard label="Appointments scheduled" value={data.summary.appointmentsScheduled} accent="blue" />
-            <SummaryStatCard label="Completed" value={data.summary.completed} accent="green" />
-            <SummaryStatCard label="Blocked by access barriers" value={data.summary.blockedByBarriers} accent="amber" />
-          </div>
+          {(() => {
+            const copdPatients = data.allPatients.filter(view => view.hasCopd);
+            const needsReview = copdPatients.filter(view => view.openTaskCount > 0 || view.primaryAttentionReason).length;
+            const medicationDiscrepancies = "—";
+            return <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <SummaryStatCard label="Today's visits" value="—" accent="blue" />
+              <SummaryStatCard label="Assessments due" value="—" accent="amber" />
+              <SummaryStatCard label="Needs review" value={needsReview} accent="amber" />
+              <SummaryStatCard label="Medication discrepancies" value={medicationDiscrepancies} accent="neutral" />
+            </div>;
+          })()}
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">MNT Referral Queue</h2>
-            <MntReferralQueueTable items={data.queue} />
+            <h2 className="mb-3 text-base font-semibold text-[color:var(--foreground)]">Home Health Worklist</h2>
+            <AllPatientsTable patients={data.allPatients.filter(view => view.hasCopd)} quickLooks={{}} onEdit={() => undefined} onDeactivate={() => undefined} />
           </section>
         </>
       )}

@@ -4,6 +4,11 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { NurseDashboardPage } from "@/pages/NurseDashboardPage";
+import { HomeHealthVisitsPage } from "@/pages/HomeHealthVisitsPage";
+import { HomeHealthVisitPage } from "@/pages/HomeHealthVisitPage";
+import { NurseAssessmentsPage } from "@/pages/NurseAssessmentsPage";
+import { NurseMedicationReconciliationPage } from "@/pages/NurseMedicationReconciliationPage";
+import { OasisAssessmentPage } from "@/pages/OasisAssessmentPage";
 import { PatientsPage } from "@/pages/PatientsPage";
 import { PatientDashboardPage } from "@/pages/PatientDashboardPage";
 import { MedicationManagementPage } from "@/pages/MedicationManagementPage";
@@ -70,6 +75,11 @@ export function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/nurse/visits" element={<ProtectedRoute allowedRoles={["nurse"]}><HomeHealthVisitsPage /></ProtectedRoute>} />
+        <Route path="/nurse/visits/:visitId" element={<ProtectedRoute allowedRoles={["nurse"]}><HomeHealthVisitPage /></ProtectedRoute>} />
+        <Route path="/nurse/assessments" element={<ProtectedRoute allowedRoles={["nurse"]}><NurseAssessmentsPage /></ProtectedRoute>} />
+        <Route path="/nurse/assessments/:patientId/oasis" element={<ProtectedRoute allowedRoles={["nurse"]}><OasisAssessmentPage /></ProtectedRoute>} />
+        <Route path="/nurse/medication-reconciliation" element={<ProtectedRoute allowedRoles={["nurse"]}><NurseMedicationReconciliationPage /></ProtectedRoute>} />
         <Route
           path="/portal"
           element={

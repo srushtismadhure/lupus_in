@@ -33,17 +33,26 @@ export function AppSidebar() {
 
   const dashboardHome = user?.role === "nurse" ? "/nurse" : "/clinician";
 
-  const navItems = [
-    { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
-    { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
-    ...(user?.role === "clinician" ? [{ to: "/sle-systems-review", label: "COPD Review", icon: ScanSearch, enabled: true, end: false }] : []),
-    { to: "#", label: "Respiratory Trends", icon: LineChart, enabled: false },
-    { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
-    { to: "#", label: "Pulmonary Rehab", icon: Building2, enabled: false },
-    { to: "#", label: "Care Transitions", icon: ClipboardList, enabled: false },
-    { to: "#", label: "Home Health Updates", icon: House, enabled: false },
-    { to: "#", label: "Tasks", icon: FileText, enabled: false },
-  ];
+  const navItems = user?.role === "nurse"
+    ? [
+        { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
+        { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
+        { to: "/nurse/visits", label: "Visits", icon: House, enabled: true, end: false },
+        { to: "/nurse/assessments", label: "Assessments", icon: ClipboardList, enabled: true, end: false },
+        { to: "/nurse/medication-reconciliation", label: "Medication Reconciliation", icon: Pill, enabled: true, end: false },
+        { to: "#", label: "Care Transitions", icon: Building2, enabled: false },
+        { to: "#", label: "Tasks", icon: FileText, enabled: false },
+      ]
+    : [
+        { to: dashboardHome, label: "Dashboard", icon: LayoutDashboard, enabled: true, end: true },
+        { to: "/patients", label: "Patients", icon: Users, enabled: true, end: false },
+        ...(user?.role === "clinician" ? [{ to: "/sle-systems-review", label: "COPD Review", icon: ScanSearch, enabled: true, end: false }] : []),
+        { to: "#", label: "Respiratory Trends", icon: LineChart, enabled: false },
+        { to: "/medications", label: "Medications", icon: Pill, enabled: true, end: false },
+        { to: "#", label: "Pulmonary Rehab", icon: Building2, enabled: false },
+        { to: "#", label: "Home Health Updates", icon: House, enabled: false },
+        { to: "#", label: "Tasks", icon: FileText, enabled: false },
+      ];
 
   return (
     <aside className="min-h-screen w-16 shrink-0 self-stretch bg-[var(--brand)] text-[color:var(--sidebar-foreground)] md:w-60">

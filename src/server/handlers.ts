@@ -8,6 +8,7 @@
  * call the exact same code with zero duplication.
  */
 import { getFhirConfig } from "../lib/fhir-config.js";
+import OpenAI from "openai";
 import {
   buildClearedSessionCookie,
   buildSessionCookie,
@@ -382,6 +383,69 @@ export async function handleNurseMntWorklist(req: Request): Promise<Response> {
     console.error("Failed to build MNT worklist:", error instanceof Error ? error.message : "unknown error");
     return networkErrorResponse();
   }
+}
+
+export async function handleTranscribeHomeHealthVisit(req: Request, visitId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return Response.json({ error: "OPENAI_API_KEY is not configured on the server." }, { status: 503 });
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return Response.json({ error: "Expected multipart/form-data audio upload." }, { status: 400 });
+  }
+  const audio = form.get("audio");
+  if (!(audio instanceof File) || audio.size === 0) return Response.json({ error: "An audio file is required." }, { status: 400 });
+  try {
+    const openai = new OpenAI({ apiKey });
+    const result = await openai.audio.transcriptions.create({
+      file: audio,
+      model: process.env.OPENAI_TRANSCRIPTION_MODEL ?? "gpt-transcribe",
+      response_format: "json",
+    });
+    if (!result.text) return Response.json({ error: "Transcription returned no text." }, { status: 502 });
+    return Response.json({ visitId, transcript: result.text, model: process.env.OPENAI_TRANSCRIPTION_MODEL ?? "gpt-transcribe", status: "completed" }, { status: 200 });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Transcription failed." }, { status: 502 });
+  }
+}
+
+export async function handleExtractHomeHealthFindings(req: Request, visitId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return Response.json({ error: "OPENAI_API_KEY is not configured on the server." }, { status: 503 });
+  const parsed = await readJsonBody<{ transcript?: string }>(req);
+  if (!parsed.ok) return parsed.response;
+  if (!parsed.body.transcript?.trim()) return Response.json({ error: "A reviewed transcript is required." }, { status: 400 });
+  const response = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.OPENAI_MODEL ?? "gpt-4o-mini", input: [{ role: "system", content: "Extract candidate COPD home-health findings only. Never finalize clinical facts. Return JSON with findings, each having category, finding, evidenceText, and status candidate." }, { role: "user", content: parsed.body.transcript }], text: { format: { type: "json_object" } } }) });
+  const body = (await response.json().catch(() => null)) as { output_text?: string; error?: { message?: string } } | null;
+  if (!response.ok || !body?.output_text) return Response.json({ error: body?.error?.message ?? `Extraction failed (${response.status}).` }, { status: 502 });
+  let findings: unknown;
+  try { findings = JSON.parse(body.output_text); } catch { return Response.json({ error: "Extraction returned invalid structured output." }, { status: 502 }); }
+  return Response.json({ visitId, status: "candidate", findings }, { status: 200 });
+}
+
+export async function handleConfirmHomeHealthFinding(req: Request, visitId: string): Promise<Response> {
+  const session = requireRole(req, "nurse", "clinician");
+  if (!session) return getSessionFromRequest(req) ? forbiddenResponse() : unauthorizedResponse();
+  const parsed = await readJsonBody<{ patientId?: string; kind?: "spo2" | "respiratory-rate" | "medication-not-taking"; value?: string; medicationRequestId?: string; reason?: string; evidenceText?: string }>(req);
+  if (!parsed.ok) return parsed.response;
+  const input = parsed.body;
+  if (!input.patientId || !input.kind || !input.value) return Response.json({ error: "patientId, kind, and value are required." }, { status: 400 });
+  const target = `Patient/${input.patientId}`;
+  if (input.kind === "medication-not-taking") {
+    const statement = await createMedicationStatement({ patientId: input.patientId, medicationRequestId: input.medicationRequestId, medicationText: input.value, status: "not-taken", note: `${input.reason ?? "Patient reported not taking"}. Evidence: ${input.evidenceText ?? ""}`, actorDisplay: session.displayName });
+    if (!statement.ok) return Response.json({ error: statement.error }, { status: statement.status });
+    return Response.json({ ok: true, resourceType: "MedicationStatement", id: statement.id, visitId }, { status: 201 });
+  }
+  const code = input.kind === "spo2" ? { system: "http://loinc.org", code: "59408-5", display: "Oxygen saturation in arterial blood by pulse oximetry" } : { system: "http://loinc.org", code: "9279-1", display: "Respiratory rate" };
+  const observation: fhir4.Observation = { resourceType: "Observation", identifier: [{ system: "https://waypoint.example/fhir/identifier/home-health", value: `${visitId}-${input.kind}-${new Date().toISOString().slice(0, 10)}` }], status: "final", code: { coding: [code], text: code.display }, subject: { reference: target }, effectiveDateTime: new Date().toISOString(), valueQuantity: { value: Number(input.value), unit: input.kind === "spo2" ? "%" : "breaths/min", system: "http://unitsofmeasure.org" }, note: [{ text: `Confirmed by ${session.displayName}. Evidence: ${input.evidenceText ?? ""}` }] };
+  const created = await createFhirResource<fhir4.Observation | fhir4.OperationOutcome>("Observation", observation);
+  if (created.status !== 201 || isOperationOutcome(created.body)) return Response.json({ error: "Unable to save confirmed observation." }, { status: created.status });
+  return Response.json({ ok: true, resourceType: "Observation", id: created.body.id, visitId }, { status: 201 });
 }
 
 function mntActionResponse(result: MntActionResult): Response {

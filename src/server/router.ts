@@ -73,6 +73,9 @@ import {
   handleGetSleSystemsReview,
   handleSubmitSleSystemAssessment,
   handleCreateSleSystemTask,
+  handleTranscribeHomeHealthVisit,
+  handleExtractHomeHealthFindings,
+  handleConfirmHomeHealthFinding,
 } from "./handlers.js";
 
 function jsonError(message: string, status: number): Response {
@@ -209,6 +212,18 @@ export async function handleRequest(req: Request): Promise<Response> {
   if (segments.length === 2 && segments[0] === "nurse" && segments[1] === "mnt-worklist") {
     if (method !== "GET") return jsonError("Method not allowed", 405);
     return handleNurseMntWorklist(req);
+  }
+  if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "transcribe") {
+    if (method !== "POST") return jsonError("Method not allowed", 405);
+    return handleTranscribeHomeHealthVisit(req, segments[2]!);
+  }
+  if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "extract") {
+    if (method !== "POST") return jsonError("Method not allowed", 405);
+    return handleExtractHomeHealthFindings(req, segments[2]!);
+  }
+  if (segments.length === 4 && segments[0] === "home-health" && segments[1] === "visits" && segments[3] === "confirm") {
+    if (method !== "POST") return jsonError("Method not allowed", 405);
+    return handleConfirmHomeHealthFinding(req, segments[2]!);
   }
 
   // --- patients ---

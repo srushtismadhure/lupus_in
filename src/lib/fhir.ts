@@ -156,9 +156,19 @@ export async function getPatientImmunizations(patientId: string): Promise<fhir4.
   return extractResourcesFromBundle<fhir4.Immunization>(bundle, "Immunization").filter(item => referencesPatient(item.patient, patientId));
 }
 
+export async function getPatientQuestionnaireResponses(patientId: string): Promise<fhir4.QuestionnaireResponse[]> {
+  const bundle = await fhirFetch(`/QuestionnaireResponse?patient=${encodeURIComponent(patientId)}`);
+  return extractResourcesFromBundle<fhir4.QuestionnaireResponse>(bundle, "QuestionnaireResponse").filter(item => referencesPatient(item.subject, patientId));
+}
+
 export async function createTask(task: fhir4.Task): Promise<fhir4.Task> {
   const resource = await fhirFetch("/Task", { method: "POST", body: task });
   return resource as fhir4.Task;
+}
+
+export async function createQuestionnaireResponse(response: fhir4.QuestionnaireResponse): Promise<fhir4.QuestionnaireResponse> {
+  const resource = await fhirFetch("/QuestionnaireResponse", { method: "POST", body: response });
+  return resource as fhir4.QuestionnaireResponse;
 }
 
 export { FhirRequestError, referencesPatient };
