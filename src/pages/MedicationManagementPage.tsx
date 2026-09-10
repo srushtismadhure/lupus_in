@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import { ReconcileDialog } from "@/components/medications/ReconcileDialog";
 import { SymptomAssessmentDialog } from "@/components/medications/SymptomAssessmentDialog";
 import { getPatient, getPatientConditions, getPatientObservations, getPatientTasks } from "@/lib/fhir";
 import { getPatientMedicationState, signMedicationRequest } from "@/lib/medication-client";
-import type { MedicationPatientState, MedicationRegimenItem, ReconciliationIssueView } from "@/lib/medication-types";
+import type { MedicationPatientState, MedicationRegimenItem, MedicationStatementView, ReconciliationIssueView } from "@/lib/medication-types";
 import { toast } from "sonner";
 
 interface PageData {
@@ -34,6 +34,7 @@ interface PageData {
 
 export function MedicationManagementPage() {
   const { patientId } = useParams<{ patientId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const canManageOrders = user?.role === "clinician";
@@ -41,8 +42,8 @@ export function MedicationManagementPage() {
   const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [handoffMessage, setHandoffMessage] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-
   const [addOpen, setAddOpen] = useState(false);
   const [holdTarget, setHoldTarget] = useState<MedicationRegimenItem | null>(null);
   const [stopTarget, setStopTarget] = useState<MedicationRegimenItem | null>(null);
@@ -50,6 +51,17 @@ export function MedicationManagementPage() {
   const [reconcileTarget, setReconcileTarget] = useState<{ medicationRequestId?: string; medicationText: string } | null>(null);
   const [assessmentOpen, setAssessmentOpen] = useState(false);
   const evidenceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (searchParams.get("finalized") !== "1") return;
+    const stored = sessionStorage.getItem("waypoint-reconciliation-message");
+    if (stored) {
+      setHandoffMessage(stored);
+      sessionStorage.removeItem("waypoint-reconciliation-message");
+    } else {
+      setHandoffMessage("Home Health note finalized. Approved findings were sent to Medication Reconciliation.");
+    }
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     if (!patientId) return;
@@ -89,7 +101,7 @@ export function MedicationManagementPage() {
   }, [patientId]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load, reloadKey]);
 
   const refresh = () => setReloadKey(k => k + 1);
@@ -112,12 +124,12 @@ export function MedicationManagementPage() {
     setReconcileTarget({ medicationRequestId: issue.medicationRequestId, medicationText: issue.medicationText });
   }
 
+  function handleReconcileStatement(statement: MedicationStatementView) {
+    setReconcileTarget({ medicationText: statement.medicationText });
+  }
+
   if (loading) {
-    return (
-      <AppShell title="Medication Management">
-        <p className="text-sm text-muted-foreground">Loading medication data...</p>
-      </AppShell>
-    );
+    return <AppShell title="Medication Management"><p className="text-sm text-muted-foreground">Loading medication data...</p></AppShell>;
   }
 
   if (error || !data) {
@@ -126,9 +138,7 @@ export function MedicationManagementPage() {
         <Alert variant="destructive">
           <AlertDescription className="flex items-center justify-between gap-3">
             <span>{error ?? "Unable to load medication data."}</span>
-            <Button size="sm" variant="outline" onClick={refresh}>
-              Retry
-            </Button>
+            <Button size="sm" variant="outline" onClick={refresh}>Retry</Button>
           </AlertDescription>
         </Alert>
       </AppShell>
@@ -137,9 +147,10 @@ export function MedicationManagementPage() {
 
   const { patient, conditions, observations, medicationState, timelineEvents } = data;
   const allRegimenItems = [...Object.values(medicationState.regimenByGroup).flat(), ...medicationState.inactiveOrders];
+  const prescribedNames = allRegimenItems.map(item => item.medicationText);
 
   return (
-    <AppShell title="Medication Management" subtitle="Review the treatment regimen, medication safety, adherence, and monitoring over time.">
+    <AppShell title="Medication Management" subtitle="Review prescribed therapy, Home Health medication findings, safety issues, and reconciliation status.">
       <PatientHeader
         patient={patient}
         conditions={conditions}
@@ -150,16 +161,30 @@ export function MedicationManagementPage() {
 
       {patientId && <PatientSubNav patientId={patientId} />}
 
-      {!medicationState.cohortMember && (
-        <Alert variant="warning" className="mb-4">
+      {handoffMessage && (
+        <Alert className="mb-4 border-emerald-200 bg-emerald-50">
           <AlertDescription>
-            This patient does not have a documented lupus-nephritis or chronic kidney disease diagnosis in the current record. Medication data
-            below is still scoped to this patient only.
+            <span className="font-semibold">Home Health handoff complete.</span> {handoffMessage}
           </AlertDescription>
         </Alert>
       )}
 
       <MedicationSafetySummary counts={medicationState.safetyCounts} />
+
+      <div className="mb-6">
+        <ReconciliationPanel
+          issues={medicationState.reconciliationIssues}
+          statements={medicationState.medicationStatements}
+          prescribedMedicationNames={prescribedNames}
+          onReconcile={handleReconcileFromIssue}
+          onReconcileStatement={handleReconcileStatement}
+          onContactPatient={() => toast.info("Use the patient's Care Tasks to document outreach.")}
+        />
+      </div>
+
+      <div className="mb-6">
+        <CdsConflictsSection issues={medicationState.detectedIssues} canResolve={canManageOrders} onResolved={refresh} />
+      </div>
 
       <div className="mb-6">
         <ActiveRegimenSection
@@ -186,18 +211,10 @@ export function MedicationManagementPage() {
             {medicationState.assessments.length === 0 ? "No repeated symptom assessments are available." : `${medicationState.assessments.length} assessment(s) recorded.`}
           </p>
         </div>
-        <Button size="sm" onClick={() => setAssessmentOpen(true)}>
-          Complete medication assessment
-        </Button>
+        <Button size="sm" onClick={() => setAssessmentOpen(true)}>Complete medication assessment</Button>
       </div>
 
-      <div className="mb-6">
-        <MonitoringMatrix regimenItems={allRegimenItems.filter(i => i.status === "active")} />
-      </div>
-
-      <div className="mb-6">
-        <ReconciliationPanel issues={medicationState.reconciliationIssues} onReconcile={handleReconcileFromIssue} onContactPatient={() => toast.info("Use the patient's Care Tasks to document outreach.")} />
-      </div>
+      <div className="mb-6"><MonitoringMatrix regimenItems={allRegimenItems.filter(i => i.status === "active")} /></div>
 
       <div className="mb-6">
         <MedicationHistorySection
@@ -205,10 +222,6 @@ export function MedicationManagementPage() {
           statements={medicationState.medicationStatements}
           administrations={medicationState.medicationAdministrations}
         />
-      </div>
-
-      <div className="mb-6">
-        <CdsConflictsSection issues={medicationState.detectedIssues} canResolve={canManageOrders} onResolved={refresh} />
       </div>
 
       <div ref={evidenceRef}>
@@ -221,44 +234,11 @@ export function MedicationManagementPage() {
         />
       </div>
 
-      {patientId && (
-        <AddMedicationDialog open={addOpen} onOpenChange={setAddOpen} patientId={patientId} conditions={conditions} onSaved={refresh} />
-      )}
-
-      {holdTarget && (
-        <MedicationReasonDialog
-          open={!!holdTarget}
-          onOpenChange={open => !open && setHoldTarget(null)}
-          mode="hold"
-          medicationRequestId={holdTarget.id}
-          medicationText={holdTarget.medicationText}
-          onSaved={refresh}
-        />
-      )}
-
-      {stopTarget && (
-        <MedicationReasonDialog
-          open={!!stopTarget}
-          onOpenChange={open => !open && setStopTarget(null)}
-          mode="stop"
-          medicationRequestId={stopTarget.id}
-          medicationText={stopTarget.medicationText}
-          onSaved={refresh}
-        />
-      )}
-
+      {patientId && <AddMedicationDialog open={addOpen} onOpenChange={setAddOpen} patientId={patientId} conditions={conditions} onSaved={refresh} />}
+      {holdTarget && <MedicationReasonDialog open={!!holdTarget} onOpenChange={open => !open && setHoldTarget(null)} mode="hold" medicationRequestId={holdTarget.id} medicationText={holdTarget.medicationText} onSaved={refresh} />}
+      {stopTarget && <MedicationReasonDialog open={!!stopTarget} onOpenChange={open => !open && setStopTarget(null)} mode="stop" medicationRequestId={stopTarget.id} medicationText={stopTarget.medicationText} onSaved={refresh} />}
       <ReplaceMedicationDialog open={!!replaceTarget} onOpenChange={open => !open && setReplaceTarget(null)} item={replaceTarget} onSaved={refresh} />
-
-      {patientId && (
-        <ReconcileDialog
-          open={!!reconcileTarget}
-          onOpenChange={open => !open && setReconcileTarget(null)}
-          patientId={patientId}
-          target={reconcileTarget}
-          onSaved={refresh}
-        />
-      )}
-
+      {patientId && <ReconcileDialog open={!!reconcileTarget} onOpenChange={open => !open && setReconcileTarget(null)} patientId={patientId} target={reconcileTarget} onSaved={refresh} />}
       {patientId && <SymptomAssessmentDialog open={assessmentOpen} onOpenChange={setAssessmentOpen} patientId={patientId} onSaved={refresh} />}
     </AppShell>
   );
