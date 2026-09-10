@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { HomeHealthVisitNarrative, type HomeHealthCandidate } from "@/components/HomeHealthVisitNarrative";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
 import { formatPatientName } from "@/lib/formatters";
 
 const COPD_QUESTIONNAIRE = "https://waypoint.example/fhir/Questionnaire/copd-home-health-subset";
+const HOME_HEALTH_IDENTIFIER = "https://waypoint.example/fhir/identifier/home-health";
 const COPD_FIELDS = [
   ["spo2", "SpO2"],
   ["respiratory-rate", "Respiratory rate"],
@@ -34,6 +35,7 @@ const COPD_FIELDS = [
 ] as const;
 
 type Answers = Record<string, string>;
+type ApprovedFinding = HomeHealthCandidate & { approvedValue: string };
 
 function responseAnswers(response: fhir4.QuestionnaireResponse | null): Answers {
   return Object.fromEntries(
@@ -44,20 +46,11 @@ function responseAnswers(response: fhir4.QuestionnaireResponse | null): Answers 
 }
 
 function answerItems(answers: Answers) {
-  return COPD_FIELDS.map(([linkId, text]) => ({
-    linkId,
-    text,
-    answer: answers[linkId] ? [{ valueString: answers[linkId] }] : [],
-  }));
+  return COPD_FIELDS.map(([linkId, text]) => ({ linkId, text, answer: answers[linkId] ? [{ valueString: answers[linkId] }] : [] }));
 }
 
 function medicationRequestText(request: fhir4.MedicationRequest): string {
-  return (
-    request.medicationCodeableConcept?.text ??
-    request.medicationCodeableConcept?.coding?.[0]?.display ??
-    request.medicationReference?.display ??
-    ""
-  );
+  return request.medicationCodeableConcept?.text ?? request.medicationCodeableConcept?.coding?.[0]?.display ?? request.medicationReference?.display ?? "";
 }
 
 function candidateText(candidate: HomeHealthCandidate, editedValue?: string): string {
@@ -76,12 +69,23 @@ function parsePatientReportedMedication(text: string): { medicationText: string;
     : /\bonce\s+daily\b|\bdaily\b/i.test(text)
       ? "once daily"
       : undefined;
-  const doseText = [dose ? `${dose} mg` : undefined, frequency].filter(Boolean).join(" ") || undefined;
-  return { medicationText: "Propranolol", doseText };
+  return { medicationText: "Propranolol", doseText: [dose ? `${dose} mg` : undefined, frequency].filter(Boolean).join(" ") || undefined };
+}
+
+async function fhirCreate<T extends fhir4.FhirResource>(resourceType: T["resourceType"], resource: T): Promise<T> {
+  const response = await fetch(`/fhir/${resourceType}`, {
+    method: "POST",
+    headers: { Accept: "application/fhir+json", "Content-Type": "application/fhir+json" },
+    body: JSON.stringify(resource),
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(body?.issue?.[0]?.diagnostics ?? `Unable to create ${resourceType}.`);
+  return body as T;
 }
 
 export function HomeHealthVisitPage() {
   const { visitId } = useParams<{ visitId: string }>();
+  const navigate = useNavigate();
   const [patient, setPatient] = useState<fhir4.Patient | null>(null);
   const [observations, setObservations] = useState<fhir4.Observation[]>([]);
   const [medications, setMedications] = useState<fhir4.MedicationRequest[]>([]);
@@ -91,6 +95,7 @@ export function HomeHealthVisitPage() {
   const [copdAnswers, setCopdAnswers] = useState<Answers>({});
   const [transcript, setTranscript] = useState("");
   const [findings, setFindings] = useState<HomeHealthCandidate[]>([]);
+  const [approvedFindings, setApprovedFindings] = useState<ApprovedFinding[]>([]);
   const [recording, setRecording] = useState(false);
   const [dictating, setDictating] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -153,26 +158,14 @@ export function HomeHealthVisitPage() {
       channel.onmessage = event => {
         try {
           const message = JSON.parse(event.data as string);
-          if (
-            message.type === "conversation.item.input_audio_transcription.delta" ||
-            message.type === "response.audio_transcript.delta"
-          ) {
+          if (message.type === "conversation.item.input_audio_transcription.delta" || message.type === "response.audio_transcript.delta") {
             realtimeTextRef.current += message.delta ?? "";
             setLiveTranscript(realtimeTextRef.current);
             if (dictatingRef.current) setTranscript(realtimeTextRef.current);
           }
-          if (message.type === "error") {
-            setLiveTranscriptionError(message.error?.message ?? "OpenAI Realtime transcription error.");
-          }
+          if (message.type === "error") setLiveTranscriptionError(message.error?.message ?? "OpenAI Realtime transcription error.");
         } catch {
-          // Ignore malformed display-only realtime events. Final server transcription remains authoritative.
-        }
-      };
-      pc.onconnectionstatechange = () => {
-        if (["failed", "closed", "disconnected"].includes(pc.connectionState)) {
-          setLiveTranscriptionError(
-            "OpenAI Realtime transcription disconnected. The visit is still being recorded and will be transcribed after recording stops.",
-          );
+          // Live words are display-only; malformed events do not affect the final server transcript.
         }
       };
       const offer = await pc.createOffer();
@@ -193,14 +186,7 @@ export function HomeHealthVisitPage() {
     }
   }
 
-  function setAnswer(linkId: string, value: string) {
-    setCopdAnswers(current => ({ ...current, [linkId]: value }));
-  }
-
-  async function saveAssessment(
-    status: fhir4.QuestionnaireResponse["status"] = "in-progress",
-    answers = copdAnswers,
-  ) {
+  async function saveAssessment(status: fhir4.QuestionnaireResponse["status"] = "in-progress", answers = copdAnswers) {
     if (!visitId) return;
     setSaving(true);
     setError(null);
@@ -246,10 +232,7 @@ export function HomeHealthVisitPage() {
     try {
       const form = new FormData();
       form.append("audio", blob, `${visitId}.webm`);
-      const response = await fetch(`/api/home-health/visits/${encodeURIComponent(visitId)}/transcribe`, {
-        method: "POST",
-        body: form,
-      });
+      const response = await fetch(`/api/home-health/visits/${encodeURIComponent(visitId)}/transcribe`, { method: "POST", body: form });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Transcription failed.");
       setTranscript(body.transcript ?? "");
@@ -265,54 +248,35 @@ export function HomeHealthVisitPage() {
   function startRecording() {
     setError(null);
     dictatingRef.current = false;
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined" || typeof RTCPeerConnection === "undefined") {
-      setError("This browser cannot record or connect to live transcription.");
-      return;
-    }
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(stream => {
-        audioStream.current = stream;
-        chunks.current = [];
-        const next = new MediaRecorder(stream);
-        recorder.current = next;
-        next.ondataavailable = event => {
-          if (event.data.size) chunks.current.push(event.data);
-        };
-        next.onstop = async () => {
-          stream.getTracks().forEach(track => track.stop());
-          audioStream.current = null;
-          const blob = new Blob(chunks.current, { type: next.mimeType || "audio/webm" });
-          audioBlob.current = blob;
-          setRecording(false);
-          stopRealtime();
-          await transcribeBlob(blob);
-        };
-        next.start();
-        setRecording(true);
-        void startRealtime(stream);
-      })
-      .catch(() => setError("Microphone permission was denied or no microphone is available."));
-  }
-
-  function stopRecording() {
-    recorder.current?.stop();
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") return setError("This browser cannot record audio.");
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      audioStream.current = stream;
+      chunks.current = [];
+      const next = new MediaRecorder(stream);
+      recorder.current = next;
+      next.ondataavailable = event => { if (event.data.size) chunks.current.push(event.data); };
+      next.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        audioStream.current = null;
+        const blob = new Blob(chunks.current, { type: next.mimeType || "audio/webm" });
+        audioBlob.current = blob;
+        setRecording(false);
+        stopRealtime();
+        await transcribeBlob(blob);
+      };
+      next.start();
+      setRecording(true);
+      void startRealtime(stream);
+    }).catch(() => setError("Microphone permission was denied or no microphone is available."));
   }
 
   function startDictation() {
-    if (typeof RTCPeerConnection === "undefined") {
-      setLiveTranscriptionError("This browser cannot connect to OpenAI Realtime transcription.");
-      return;
-    }
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(stream => {
-        audioStream.current = stream;
-        dictatingRef.current = true;
-        setDictating(true);
-        void startRealtime(stream);
-      })
-      .catch(() => setLiveTranscriptionError("Microphone permission was denied or no microphone is available."));
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      audioStream.current = stream;
+      dictatingRef.current = true;
+      setDictating(true);
+      void startRealtime(stream);
+    }).catch(() => setLiveTranscriptionError("Microphone permission was denied or no microphone is available."));
   }
 
   function stopDictation() {
@@ -324,173 +288,134 @@ export function HomeHealthVisitPage() {
     setTranscript(realtimeTextRef.current);
   }
 
-  useEffect(
-    () => () => {
-      stopRealtime();
-      audioStream.current?.getTracks().forEach(track => track.stop());
-    },
-    [],
-  );
+  useEffect(() => () => {
+    stopRealtime();
+    audioStream.current?.getTracks().forEach(track => track.stop());
+  }, []);
 
   async function extractFindings() {
     if (!visitId || !transcript.trim()) return;
-    try {
-      const response = await fetch(`/api/home-health/visits/${encodeURIComponent(visitId)}/extract`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Extraction failed.");
-      const raw = body.findings?.findings ?? body.findings;
-      setFindings(Array.isArray(raw) ? raw : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Structured extraction failed.");
-    }
-  }
-
-  async function persistPatientReportedMedication(
-    candidate: HomeHealthCandidate,
-    text: string,
-    medication: { medicationText: string; doseText?: string },
-  ) {
-    if (!visitId) return;
-    const statementResponse = await fetch(`/api/patients/${encodeURIComponent(visitId)}/medication-statements`, {
+    const response = await fetch(`/api/home-health/visits/${encodeURIComponent(visitId)}/extract`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        medicationText: medication.medicationText,
-        status: "active",
-        doseText: medication.doseText,
-        note: `Patient-reported during Home Health medication reconciliation. Evidence: ${candidate.evidenceText ?? text}`,
-      }),
+      body: JSON.stringify({ transcript }),
     });
-    const statementBody = await statementResponse.json().catch(() => null);
-    if (!statementResponse.ok) {
-      throw new Error(statementBody?.error ?? "Unable to record patient-reported medication.");
-    }
-
-    const taskResponse = await fetch(`/api/patients/${encodeURIComponent(visitId)}/prior-auth/tasks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: `Review Home Health medication reconciliation: patient reports ${medication.medicationText}${medication.doseText ? ` ${medication.doseText}` : ""}.`,
-        focusReference: statementBody?.id ? `MedicationStatement/${statementBody.id}` : undefined,
-      }),
-    });
-    if (!taskResponse.ok && taskResponse.status !== 409) {
-      const taskBody = await taskResponse.json().catch(() => null);
-      throw new Error(taskBody?.error ?? "Medication was recorded, but the clinician review task could not be created.");
-    }
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? "Structured extraction failed.");
+    const raw = body.findings?.findings ?? body.findings;
+    const extracted = Array.isArray(raw) ? raw : [];
+    setFindings(extracted.map((item: HomeHealthCandidate) => ({ ...item, reviewStatus: "pending" })));
   }
 
-  async function confirmCandidate(candidate: HomeHealthCandidate, editedValue?: string) {
-    if (!visitId || candidate.targetQuestionnaire === "oasis") return;
-    const value = editedValue ?? String(candidate.candidateValue ?? candidate.finding ?? "");
-    const combined = candidateText(candidate, editedValue);
-    const lower = combined.toLowerCase();
-    const patientReportedMedication = parsePatientReportedMedication(combined);
-
-    try {
-      if (patientReportedMedication) {
-        await persistPatientReportedMedication(candidate, combined, patientReportedMedication);
-        const nextAnswers = { ...copdAnswers, "medication-use": combined };
-        setCopdAnswers(nextAnswers);
-        await saveAssessment("in-progress", nextAnswers);
-        setFindings(current =>
-          current.map(item =>
-            item === candidate ? { ...item, candidateValue: value, reviewStatus: "confirmed" } : item,
-          ),
-        );
-        return;
-      }
-
-      const kind = lower.includes("spo2") || lower.includes("oxygen saturation")
-        ? "spo2"
-        : lower.includes("respiratory-rate") || lower.includes("respiratory rate")
-          ? "respiratory-rate"
-          : /not taking|ran out|refill|missed|stopped taking|could not afford/i.test(lower)
-            ? "medication-not-taking"
-            : null;
-
-      if (!kind) {
-        setError("This candidate needs clinical review in Notes & Coding before it can be written to FHIR.");
-        return;
-      }
-
-      const matchedRequest =
-        kind === "medication-not-taking"
-          ? medications.find(request => lower.includes(medicationRequestText(request).toLowerCase().split(" ")[0] ?? "")) ?? medications[0]
-          : undefined;
-
-      const response = await fetch(`/api/home-health/visits/${encodeURIComponent(visitId)}/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientId: visitId,
-          kind,
-          value: kind === "medication-not-taking" && matchedRequest ? medicationRequestText(matchedRequest) : value,
-          medicationRequestId: matchedRequest?.id,
-          evidenceText: candidate.evidenceText,
-          reason: candidate.label ?? candidate.finding,
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Unable to confirm finding.");
-
-      const nextAnswers = {
-        ...copdAnswers,
-        ...(candidate.linkId ? { [candidate.linkId]: value } : {}),
-      };
-      setCopdAnswers(nextAnswers);
-      await saveAssessment("in-progress", nextAnswers);
-      setFindings(current =>
-        current.map(item =>
-          item === candidate ? { ...item, candidateValue: value, reviewStatus: "confirmed" } : item,
-        ),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to confirm finding.");
-    }
+  function approveCandidate(candidate: HomeHealthCandidate, editedValue?: string) {
+    const approvedValue = editedValue ?? String(candidate.candidateValue ?? candidate.finding ?? "");
+    setFindings(current => current.map(item => item === candidate ? { ...item, candidateValue: approvedValue, reviewStatus: "confirmed" } : item));
+    setApprovedFindings(current => [
+      ...current.filter(item => !(item.linkId === candidate.linkId && item.finding === candidate.finding)),
+      { ...candidate, candidateValue: approvedValue, reviewStatus: "confirmed", approvedValue },
+    ]);
   }
 
   function rejectCandidate(candidate: HomeHealthCandidate) {
-    setFindings(current =>
-      current.map(item => (item === candidate ? { ...item, reviewStatus: "rejected" } : item)),
-    );
+    setFindings(current => current.map(item => item === candidate ? { ...item, reviewStatus: "rejected" } : item));
+    setApprovedFindings(current => current.filter(item => !(item.linkId === candidate.linkId && item.finding === candidate.finding)));
   }
 
-  if (!patient) {
-    return (
-      <AppShell title="Home Health Visit">
-        <p className="text-sm text-[color:var(--muted-foreground)]">{error ?? "Loading visit..."}</p>
-      </AppShell>
-    );
+  async function createClinicianReviewArtifacts(statement: fhir4.MedicationStatement) {
+    if (!visitId || !statement.id) return;
+    const issue = await fhirCreate<fhir4.DetectedIssue>("DetectedIssue", {
+      resourceType: "DetectedIssue",
+      identifier: [{ system: HOME_HEALTH_IDENTIFIER, value: `${visitId}-propranolol-copd-${new Date().toISOString().slice(0, 10)}` }],
+      status: "preliminary",
+      severity: "moderate",
+      code: {
+        text: "COPD medication review required",
+        coding: [{ system: "https://waypoint.example/cds-rules", code: "nonselective-beta-blocker-copd-review", display: "Nonselective beta-blocker requires COPD review" }],
+      },
+      patient: { reference: `Patient/${visitId}` },
+      identifiedDateTime: new Date().toISOString(),
+      implicated: [
+        { reference: `MedicationStatement/${statement.id}`, display: "Patient-reported propranolol" },
+        ...medications.filter(med => /albuterol/i.test(medicationRequestText(med))).slice(0, 1).map(med => ({ reference: `MedicationRequest/${med.id}`, display: medicationRequestText(med) })),
+      ],
+      detail: "Home Health documented propranolol in a patient with COPD who also uses beta-agonist rescue therapy. Clinician review is recommended; this demo rule does not automatically discontinue medication.",
+    });
+
+    await fhirCreate<fhir4.Task>("Task", {
+      resourceType: "Task",
+      identifier: [{ system: HOME_HEALTH_IDENTIFIER, value: `${visitId}-med-reconciliation-${statement.id}` }],
+      status: "requested",
+      intent: "order",
+      priority: "routine",
+      description: "Review Home Health medication reconciliation",
+      for: { reference: `Patient/${visitId}` },
+      owner: { display: "Clinician review pool" },
+      focus: { reference: `DetectedIssue/${issue.id}`, display: "COPD medication review required" },
+      authoredOn: new Date().toISOString(),
+      note: [{ text: "Patient reports propranolol 40 mg; review indication, respiratory status, and concurrent albuterol use." }],
+    });
   }
+
+  async function finalizeApprovedFindings() {
+    if (!visitId) return;
+    const medicationFindings = approvedFindings.filter(item => parsePatientReportedMedication(candidateText(item, item.approvedValue)));
+    let medicationCount = 0;
+
+    for (const finding of medicationFindings) {
+      const parsed = parsePatientReportedMedication(candidateText(finding, finding.approvedValue));
+      if (!parsed) continue;
+      const statement = await fhirCreate<fhir4.MedicationStatement>("MedicationStatement", {
+        resourceType: "MedicationStatement",
+        identifier: [{ system: HOME_HEALTH_IDENTIFIER, value: `${visitId}-${parsed.medicationText.toLowerCase()}-${new Date().toISOString().slice(0, 10)}` }],
+        status: "active",
+        medicationCodeableConcept: { text: parsed.medicationText },
+        subject: { reference: `Patient/${visitId}` },
+        context: { reference: `Encounter/${visitId}` },
+        dateAsserted: new Date().toISOString(),
+        informationSource: { display: "Waypoint Home Health RN" },
+        ...(parsed.doseText ? { dosage: [{ text: parsed.doseText }] } : {}),
+        note: [{ text: `Patient-reported medication found at home. Nurse-approved from Home Health note. Evidence: ${finding.evidenceText ?? finding.approvedValue}` }],
+      });
+      medicationCount += 1;
+      if (/propranolol/i.test(parsed.medicationText)) await createClinicianReviewArtifacts(statement);
+    }
+
+    const nonMedicationFindings = approvedFindings.filter(item => !parsePatientReportedMedication(candidateText(item, item.approvedValue)));
+    for (const finding of nonMedicationFindings) {
+      const text = candidateText(finding, finding.approvedValue).toLowerCase();
+      if (text.includes("spo2") || text.includes("oxygen saturation")) {
+        const numeric = Number(finding.approvedValue.match(/\d+(?:\.\d+)?/)?.[0]);
+        if (Number.isFinite(numeric)) await fhirCreate<fhir4.Observation>("Observation", {
+          resourceType: "Observation",
+          status: "final",
+          code: { coding: [{ system: "http://loinc.org", code: "59408-5", display: "Oxygen saturation in arterial blood by pulse oximetry" }], text: "SpO2" },
+          subject: { reference: `Patient/${visitId}` },
+          effectiveDateTime: new Date().toISOString(),
+          valueQuantity: { value: numeric, unit: "%", system: "http://unitsofmeasure.org", code: "%" },
+          note: [{ text: "Nurse-approved Home Health finding." }],
+        });
+      }
+    }
+
+    const nextAnswers = { ...copdAnswers, ...(medicationCount ? { "medication-use": `${medicationCount} medication finding(s) sent to reconciliation` } : {}) };
+    setCopdAnswers(nextAnswers);
+    await saveAssessment("completed", nextAnswers);
+    sessionStorage.setItem("waypoint-reconciliation-message", `${medicationCount || approvedFindings.length} approved Home Health finding(s) sent to Medication Reconciliation.`);
+    navigate(`/patients/${visitId}/medications?source=home-health&finalized=1`);
+  }
+
+  if (!patient) return <AppShell title="Home Health Visit"><p className="text-sm text-[color:var(--muted-foreground)]">{error ?? "Loading visit..."}</p></AppShell>;
 
   return (
-    <AppShell
-      title="Home Health Visit"
-      subtitle="One visit conversation, reviewed narrative, structured findings, and OASIS evidence"
-    >
+    <AppShell title="Home Health Visit" subtitle="One visit conversation, nurse-approved findings, and structured FHIR evidence">
       <div className="space-y-5">
         <Card className="shadow-none">
-          <CardHeader>
-            <CardTitle>{formatPatientName(patient)} · Visit workflow</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{formatPatientName(patient)} · Visit workflow</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-2 text-sm">
-            <Badge variant={copdResponse?.status === "completed" ? "success" : "warning"}>
-              COPD Assessment: {copdResponse?.status ?? "not started"}
-            </Badge>
-            <Badge variant={oasisResponse?.status === "completed" ? "success" : "neutral"}>
-              OASIS-E2: {oasisResponse?.status ?? "not started"}
-            </Badge>
-            <Badge variant={tasks.length ? "warning" : "success"}>
-              Open tasks: {tasks.filter(task => task.status !== "completed").length}
-            </Badge>
-            <Button asChild variant="outline">
-              <Link to={`/nurse/assessments/${visitId}/oasis`}>Open OASIS-E2</Link>
-            </Button>
+            <Badge variant={copdResponse?.status === "completed" ? "success" : "warning"}>COPD Assessment: {copdResponse?.status ?? "not started"}</Badge>
+            <Badge variant={oasisResponse?.status === "completed" ? "success" : "neutral"}>OASIS-E2: {oasisResponse?.status ?? "not started"}</Badge>
+            <Badge variant={tasks.filter(task => !["completed", "cancelled", "rejected"].includes(task.status)).length ? "warning" : "success"}>Open tasks: {tasks.filter(task => !["completed", "cancelled", "rejected"].includes(task.status)).length}</Badge>
+            <Button asChild variant="outline"><Link to={`/nurse/assessments/${visitId}/oasis`}>Open OASIS-E2</Link></Button>
           </CardContent>
         </Card>
 
@@ -501,14 +426,12 @@ export function HomeHealthVisitPage() {
           onTranscriptChange={setTranscript}
           onLoadDemo={loadDemoTranscript}
           onStartRecording={startRecording}
-          onStopRecording={stopRecording}
+          onStopRecording={() => recorder.current?.stop()}
           onStartDictation={startDictation}
           onStopDictation={stopDictation}
-          onTranscribe={() =>
-            audioBlob.current
-              ? void transcribeBlob(audioBlob.current)
-              : setError("Record a visit before requesting final transcription.")
-          }
+          onTranscribe={() => audioBlob.current ? void transcribeBlob(audioBlob.current) : setError("Record a visit before requesting final transcription.")}
+          onGenerateFindings={extractFindings}
+          onFinalizeApprovedFindings={finalizeApprovedFindings}
           recording={recording}
           dictating={dictating}
           transcribing={transcribing}
@@ -517,50 +440,28 @@ export function HomeHealthVisitPage() {
           liveTranscriptionSupported={liveTranscriptionSupported}
           liveTranscriptionError={liveTranscriptionError}
           findings={findings}
-          onConfirmCandidate={confirmCandidate}
+          onConfirmCandidate={approveCandidate}
           onRejectCandidate={rejectCandidate}
         />
 
         <Card className="shadow-none">
           <CardHeader>
             <CardTitle>Waypoint COPD Home Health Assessment</CardTitle>
-            <p className="text-sm text-[color:var(--muted-foreground)]">
-              Structured findings are candidates until the nurse confirms them.
-            </p>
+            <p className="text-sm text-[color:var(--muted-foreground)]">Assessment fields remain editable until the visit is completed.</p>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {COPD_FIELDS.map(([linkId, label]) => (
               <label key={linkId} className="text-sm">
                 <span className="text-[color:var(--muted-foreground)]">{label}</span>
-                <input
-                  value={copdAnswers[linkId] ?? ""}
-                  onChange={event => setAnswer(linkId, event.target.value)}
-                  className="mt-1 h-9 w-full rounded-md border border-[var(--border)] px-2"
-                />
+                <input value={copdAnswers[linkId] ?? ""} onChange={event => setCopdAnswers(current => ({ ...current, [linkId]: event.target.value }))} className="mt-1 h-9 w-full rounded-md border border-[var(--border)] px-2" />
               </label>
             ))}
-            <div className="sm:col-span-2">
-              <Button onClick={() => saveAssessment()} disabled={saving}>
-                {saving ? "Saving..." : "Save Draft"}
-              </Button>
-              <Button className="ml-2" onClick={() => saveAssessment("completed")} disabled={saving}>
-                Complete Assessment
-              </Button>
-            </div>
+            <div className="sm:col-span-2"><Button onClick={() => saveAssessment()} disabled={saving}>{saving ? "Saving..." : "Save Assessment Draft"}</Button></div>
           </CardContent>
         </Card>
 
-        {error && (
-          <p role="alert" className="text-sm text-red-700">
-            {error}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2 text-sm text-[color:var(--muted-foreground)]">
-          <span>Observations: {observations.length}</span>
-          <span>Medications: {medications.length}</span>
-          <span>OASIS remains a separate CMS-defined assessment.</span>
-        </div>
+        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+        <div className="flex flex-wrap gap-2 text-sm text-[color:var(--muted-foreground)]"><span>Observations: {observations.length}</span><span>Prescribed medications: {medications.length}</span><span>Approved findings staged: {approvedFindings.length}</span></div>
       </div>
     </AppShell>
   );
